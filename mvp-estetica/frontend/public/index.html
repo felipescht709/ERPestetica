@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoEstética Central - SaaS</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+    <div id="app-container" class="container">
+        <aside class="sidebar" id="app-sidebar" style="display: none;">
+            <div class="sidebar-header">
+                <div class="logo-circle">🚗</div>
+                <div>
+                    <h1 class="app-title">AutoEstética</h1>
+                    <p class="app-subtitle">Gestão Central</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li data-section="dashboard" class="nav-item active">
+                        <a href="#dashboard">🏠 Dashboard</a>
+                    </li>
+                    <li data-section="agenda" class="nav-item">
+                        <a href="#agenda">📅 Agenda</a>
+                    </li>
+                    <li data-section="clientes" class="nav-item">
+                        <a href="#clientes">👥 Clientes</a>
+                    </li>
+                    <li data-section="servicos" class="nav-item">
+                        <a href="#servicos">⚙️ Serviços</a>
+                    </li>
+                    <li data-section="produtos" class="nav-item">
+                        <a href="#produtos">📦 Produtos</a>
+                    </li>
+                    <li data-section="financeiro" class="nav-item">
+                        <a href="#financeiro">💰 Financeiro</a>
+                    </li>
+                    <li data-section="relatorios" class="nav-item">
+                        <a href="#relatorios">📊 Relatórios</a>
+                    </li>
+                    <li data-section="usuarios" class="nav-item">
+                        <a href="#usuarios">🧑‍💻 Usuários</a>
+                    </li>
+                    <li data-section="configuracoes" class="nav-item">
+                        <a href="#configuracoes">⚙️ Configurações</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-avatar"></div>
+                <div>
+                    <p class="user-name" id="logged-in-user-name">Carregando...</p>
+                    <p class="user-email" id="logged-in-user-email">Carregando...</p>
+                </div>
+                <button id="logout-button" class="logout-button">Sair</button>
+            </div>
+        </aside>
+        <main class="content" id="main-content">
+            <div id="dashboard-content" class="section-content">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Visão geral do seu negócio</p>
+                <div class="info-card-grid" id="dashboard-stats"></div>
+                <div class="card-section">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">Agendamentos de Hoje</h2></div>
+                        <div class="card-content" id="recent-appointments-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">Ações Rápidas</h2></div>
+                        <div class="card-content quick-actions-grid">
+                            <button class="quick-action-button" data-action="new-appointment">
+                                📅 Novo Agendamento
+                                <span>Agendar serviço</span>
+                            </button>
+                            <button class="quick-action-button" data-action="new-client">
+                                👥 Novo Cliente
+                                <span>Cadastrar cliente</span>
+                            </button>
+                            <button class="quick-action-button" data-action="new-service">
+                                ⚙️ Novo Serviço
+                                <span>Cadastrar serviço</span>
+                            </button>
+                            <button class="quick-action-button" data-action="financial-reports">
+                                💰 Financeiro
+                                <span>Ver relatórios</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="agenda-content" class="section-content">
+                <h1 class="page-title">Agenda</h1>
+                <p class="page-subtitle">Gerencie seus agendamentos</p>
+                <div class="date-selector">
+                    <label for="agenda-date">Selecionar Data:</label>
+                    <input type="date" id="agenda-date">
+                </div>
+                <div id="agenda-appointments-list"></div>
+            </div>
+            <div id="clientes-content" class="section-content">
+                <h1 class="page-title">Clientes</h1>
+                <p class="page-subtitle">Gerencie sua base de clientes</p>
+                <div class="search-bar">
+                    <input type="text" id="client-search" placeholder="Buscar clientes por nome, email ou telefone...">
+                </div>
+                <div class="info-card-grid" id="client-stats"></div>
+                <div id="client-list"></div>
+            </div>
+            <div id="servicos-content" class="section-content">
+                <h1 class="page-title">Serviços</h1>
+                <p class="page-subtitle">Gerencie seus serviços e preços</p>
+                <button class="button-primary" style="margin-bottom: 24px;">
+                    ➕ <span>Novo Serviço</span>
+                </button>
+                <div class="info-card-grid" id="service-stats"></div>
+                <div id="services-by-category"></div>
+            </div>
+            <div id="financeiro-content" class="section-content">
+                <h1 class="page-title">Financeiro</h1>
+                <p class="page-subtitle">Controle suas finanças e relatórios</p>
+                <div class="info-card-grid" id="financial-overview"></div>
+                <div class="card-section">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">Transações Recentes</h2></div>
+                        <div class="card-content" id="recent-transactions-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">Formas de Pagamento</h2></div>
+                        <div class="card-content" id="payment-methods-list"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Fluxo de Caixa (Últimos 4 Meses)</h2></div>
+                    <div class="card-content" id="cash-flow-chart"></div>
+                </div>
+            </div>
+            <div id="usuarios-content" class="section-content">
+                <h1 class="page-title">Gerenciamento de Usuários</h1>
+                <p class="page-subtitle">Gerencie os usuários do sistema.</p>
+                <button class="button-primary" id="add-user-button" style="margin-bottom: 24px;">
+                    ➕ <span>Novo Usuário</span>
+                </button>
+                <div id="user-list"></div>
+            </div>
+            <div id="produtos-content" class="section-content">
+                <div class="empty-state">
+                    <h2>Produtos - Em Desenvolvimento</h2>
+                </div>
+            </div>
+            <div id="relatorios-content" class="section-content">
+                <div class="empty-state">
+                    <h2>Relatórios - Em Desenvolvimento</h2>
+                </div>
+            </div>
+            <div id="configuracoes-content" class="section-content">
+                <div class="empty-state">
+                    <h2>Configurações - Em Desenvolvimento</h2>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="auth-section" class="auth-container">
+        <div class="auth-card">
+            <h2 id="auth-title" class="auth-card-title">Login</h2>
+            <div id="auth-message" class="auth-message" style="display: none;"></div>
+            <form id="auth-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="button-primary" id="auth-submit-button">Entrar</button>
+            </form>
+            <p class="auth-switch-text">Não tem uma conta? <a href="#" id="switch-to-register">Registre-se</a></p>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/agenda.js"></script>
+    <script src="/js/clientes.js"></script>
+    <script src="/js/servicos.js"></script>
+    <script src="/js/financeiro.js"></script>
+    <script src="/js/usuarios.js"></script>
+</body>
+</html>

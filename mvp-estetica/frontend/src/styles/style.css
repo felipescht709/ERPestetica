@@ -656,3 +656,48 @@ a:hover {
         gap: 15px;
     }
 }
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.clients-table {
+  min-width: 700px;
+  width: 100%;
+  border-collapse: collapse;
+}
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 10px;
+    max-width: 98vw;
+  }
+  .form-group {
+    width: 100%;
+    min-width: 0;
+  }
+  .clients-table th, .clients-table td {
+    font-size: 0.95em;
+    padding: 6px 4px;
+  }
+  .btn-add-new {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-width: 900px) {
+  .clients-table th, .clients-table td {
+    font-size: 0.95em;
+    padding: 6px 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .clients-table th, .clients-table td {
+    font-size: 0.85em;
+    padding: 4px 2px;
+  }
+  .btn-add-new {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}

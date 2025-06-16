@@ -52,9 +52,7 @@ const AuthPage = () => {
                 nome_usuario: nome_usuario.trim(),
                 nome_empresa: nome_empresa.trim(),
                 cnpj: cnpj.trim(),
-                // Se o usuário logado for admin, ele pode escolher a role.
-                // Se for um registro inicial via AuthPage, a role é 'gestor'.
-                role: loggedInUserRole === 'admin' ? selectedRole : 'gestor', // NOVO: Lógica de seleção de role
+                role: 'admin',
                 ativo: true,
                 telefone_contato: telefone_contato.trim() || undefined,
                 codigo_ibge: codigo_ibge.trim() || undefined,
@@ -76,7 +74,7 @@ const AuthPage = () => {
         try {
             const data = await api(endpoint, {
                 method: 'POST',
-                body: requestBody,
+                body: JSON.stringify(requestBody),
             });
 
             handleAuthLogin(data.token);

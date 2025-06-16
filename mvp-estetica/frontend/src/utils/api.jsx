@@ -1,5 +1,4 @@
-// frontend/src/utils/api.js
-const API_BASE_URL = 'http://localhost:3001/api'; // <--- VERIFIQUE ESTA LINHA COM ATENÇÃO!
+const API_BASE_URL = 'http://localhost:3001/api';
 
 const getAuthToken = () => {
     return localStorage.getItem('autoEsteticaJwt');
@@ -16,10 +15,10 @@ const api = async (url, options = {}) => {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${url}`, { // Problema estava aqui se API_BASE_URL fosse undefined
+    const response = await fetch(`${API_BASE_URL}${url}`, {
         ...options,
         headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        body: options.body,
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -29,11 +28,15 @@ const api = async (url, options = {}) => {
     }
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ msg: 'Erro desconhecido.' }));
-        throw new Error(errorData.msg || `Erro na requisição: ${response.status} ${response.statusText}`); // Mensagem de erro mais detalhada
+        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido.' }));
+        throw new Error(errorData.message || `Erro na requisição: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    try {
+        return await response.json();
+    } catch (e) {
+        return {};
+    }
 };
 
 export default api;

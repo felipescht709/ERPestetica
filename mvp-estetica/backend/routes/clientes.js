@@ -84,7 +84,7 @@ router.post('/', authenticateToken, authorizeRole(['admin', 'gerente', 'atendent
         bairro,
         cidade,
         uf,
-        senha, // Apenas se o cliente terá portal de acesso
+        senha,
         ativo = true,
         observacoes_gerais,
         indicado_por,
@@ -120,7 +120,7 @@ router.post('/', authenticateToken, authorizeRole(['admin', 'gerente', 'atendent
                 cpf, nome_cliente, data_nascimento, email, telefone,
                 codigo_ibge, cep, logradouro, numero, complemento, bairro, cidade, uf,
                 senha_hash, ativo, observacoes_gerais, indicado_por, genero
-            ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+            ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
             [
                 cpf, nome_cliente, data_nascimento, email, telefone,
                 codigo_ibge, cep, logradouro, numero, complemento, bairro, cidade, uf,
@@ -153,12 +153,11 @@ router.put('/:id', authenticateToken, authorizeRole(['admin', 'gerente', 'atende
         bairro,
         cidade,
         uf,
-        senha, // Apenas se o cliente terá portal de acesso
+        senha, 
         ativo,
         observacoes_gerais,
         indicado_por,
-        genero
-        // ultimo_servico e total_gasto não devem ser atualizados diretamente aqui
+        genero 
     } = req.body;
 
     let query = 'UPDATE clientes SET ';

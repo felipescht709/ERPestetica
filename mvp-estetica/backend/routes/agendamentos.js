@@ -3,7 +3,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../banco');
 const { authenticateToken, authorizeRole } = require('../middleware/auth'); // Importa os middlewares
+const auth = require('../middleware/auth');
 
+console.log('DEBUG: Tipo de auth após require em agendamentos.js:', typeof auth); 
 // Helper para combinar data e hora (pode ser movido para um utils.js)
 const combineDateTime = (dateStr, timeStr) => {
     return new Date(`${dateStr}T${timeStr}:00`); // Assuming HH:MM format
@@ -94,43 +96,49 @@ router.get('/range', authenticateToken, authorizeRole(['admin', 'gerente', 'aten
 
 
 // GET appointment by ID
-router.get('/:id', authenticateToken, authorizeRole(['admin', 'gerente', 'atendente', 'tecnico']), async (req, res) => {
+router.get('/range', authenticateToken, authorizeRole(['admin', 'gerente', 'atendente', 'tecnico']),
+  async (req, res) => {
+    const { start, end, status } = req.query; // Pega o status da query string
+
+    if (!start || !end) {
+        return res.status(400).json({ message: 'Parâmetros "start" e "end" são obrigatórios.' });
+    }
+
+    let query = `
+        SELECT
+            a.*,
+            c.nome_cliente,
+            s.nome_servico,
+            v.marca AS veiculo_marca,
+            v.modelo AS veiculo_modelo,
+            v.placa AS veiculo_placa
+        FROM
+            agendamentos a
+        JOIN
+            clientes c ON a.cliente_cod = c.cod_cliente
+        JOIN
+            servicos s ON a.servico_cod = s.cod_servico
+        LEFT JOIN
+            veiculos v ON a.veiculo_cod = v.cod_veiculo
+        WHERE
+            a.data_hora_inicio BETWEEN $1::timestamp AND $2::timestamp
+    `;
+    const params = [start, end];
+
+    // Adiciona a condição de status se ela for fornecida
+    if (status) {
+        query += ` AND a.status = $${params.length + 1}`; // Ajusta o placeholder do parâmetro
+        params.push(status); // Adiciona o status aos parâmetros
+    }
+
+    query += ` ORDER BY a.data_hora_inicio ASC`; // Ordena para melhor visualização
+
     try {
-        const { id } = req.params;
-        const query = `
-            SELECT
-                a.cod_agendamento,
-                a.data_hora_inicio,
-                a.data_hora_fim,
-                a.preco_total,
-                a.status,
-                a.tipo_agendamento,
-                a.forma_pagamento,
-                a.observacoes_agendamento,
-                c.nome_cliente AS cliente_nome,
-                c.telefone AS cliente_telefone,
-                s.nome_servico AS servico_nome,
-                s.descricao_servico AS servico_descricao,
-                v.marca AS veiculo_marca,
-                v.modelo AS veiculo_modelo,
-                v.cor AS veiculo_cor,
-                v.placa AS veiculo_placa,
-                u.nome_usuario AS usuario_responsavel_nome
-            FROM agendamentos a
-            JOIN clientes c ON a.cliente_cod = c.cod_cliente
-            JOIN servicos s ON a.servico_cod = s.cod_servico
-            LEFT JOIN veiculos v ON a.veiculo_cod = v.cod_veiculo
-            LEFT JOIN usuarios u ON a.usuario_responsavel_cod = u.cod_usuario
-            WHERE a.cod_agendamento = $1;
-        `;
-        const appointment = await pool.query(query, [id]);
-        if (appointment.rows.length === 0) {
-            return res.status(404).json({ msg: 'Agendamento não encontrado' });
-        }
-        res.json(appointment.rows[0]);
+        const result = await pool.query(query, params);
+        res.json(result.rows);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Erro ao buscar agendamentos por range/status:', err);
+        res.status(500).json({ message: 'Erro interno do servidor ao buscar agendamentos.' });
     }
 });
 

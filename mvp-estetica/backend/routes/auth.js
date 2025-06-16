@@ -7,7 +7,7 @@ const pool = require('../banco'); // Seu pool de conexão com o banco de dados
 const { authenticateToken } = require('../middleware/auth'); // Importa o middleware de autenticação
 
 // @route    POST /api/auth/register
-// @desc     Registrar um novo usuário (ideal para o primeiro gestor da empresa)
+// @desc     Registrar um novo usuário (ideal para o primeiro admin da empresa)
 // @access   Public (nesta fase, para permitir o registro inicial de uma empresa)
 router.post('/register', async (req, res) => {
     const {
@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
         cnpj,
         email,
         senha, // Senha em texto claro vinda do frontend
-        role, // Esperamos 'gestor' para o registro inicial de empresa
+        role, // Esperamos 'admin' para o registro inicial de empresa
         telefone_contato,
         logo_url,
         codigo_ibge,
@@ -37,9 +37,9 @@ router.post('/register', async (req, res) => {
         if (senha.length < 6) {
             return res.status(400).json({ msg: 'A senha deve ter no mínimo 6 caracteres.' });
         }
-        // Para o registro inicial da empresa, apenas a role 'gestor' deve ser permitida via esta rota.
-        if (role !== 'gestor') {
-             return res.status(400).json({ msg: 'Role inválida para registro inicial. Apenas "gestor" é permitido por esta rota.' });
+        // Para o registro inicial da empresa, apenas a role 'admin' deve ser permitida via esta rota.
+        if (role !== 'admin') {
+            return res.status(400).json({ msg: 'Role inválida para registro inicial. Apenas "admin" é permitido por esta rota.' });
         }
         // Validação de formato de email e CNPJ (exemplo simplificado, pode ser mais robusto com regex)
         if (!email.includes('@') || !email.includes('.')) {

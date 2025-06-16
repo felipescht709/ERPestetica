@@ -12,7 +12,8 @@ const agendamentosRoutes = require('./routes/agendamentos');
 const homeRoutes = require('./routes/home');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/usuarios');
-const configuracoesAgendaRoutes = require('./routes/configuracoesAgenda'); // <-- VERIFIQUE ESTA LINHA: Nova importação
+const configuracoesAgendaRoutes = require('./routes/configuracoesAgenda'); 
+const financeiroRoutes = require('./routes/financeiro');
 
 // Middlewares
 const corsOptions = {
@@ -30,7 +31,8 @@ app.use('/api/servicos', servicosRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/usuarios', userRoutes);
-app.use('/api/agenda/config', configuracoesAgendaRoutes); // <-- VERIFIQUE ESTA LINHA: Nova rota para configurações da agenda
+app.use('/api/agenda/config', configuracoesAgendaRoutes); 
+app.use('/api/financeiro', financeiroRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {

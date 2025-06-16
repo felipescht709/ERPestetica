@@ -1,26 +1,25 @@
-// frontend/src/pages/Home.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import api from '../utils/api'; // Importa a função api
+import api from '../utils/api';
+// Importe componentes do react-bootstrap
+import { Container, Row, Col, Card, Spinner, Alert, ListGroup } from 'react-bootstrap';
 
 const HomePage = () => {
     const [stats, setStats] = useState(null);
     const [recentAppointments, setRecentAppointments] = useState([]);
-    const [loading, setLoading] = useState(true); // Estado de carregamento
-    const [error, setError] = useState(null); // Estado de erro
-    const { user, userRole } = useContext(AuthContext); // Pega o usuário e a role do contexto
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { user, userRole } = useContext(AuthContext);
 
     useEffect(() => {
         const loadDashboardData = async () => {
             try {
-                setLoading(true); // Começa a carregar
-                setError(null); // Limpa erros anteriores
+                setLoading(true);
+                setError(null);
 
-                // 1. Fetch de Estatísticas do Dashboard
-                const statsData = await api('/home', { method: 'GET' }); // Chama a rota /api/home
+                const statsData = await api('/home', { method: 'GET' });
                 setStats(statsData);
 
-                // 2. Fetch de Agendamentos Recentes (Hoje)
                 const today = new Date();
                 const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
                 const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
@@ -29,157 +28,137 @@ const HomePage = () => {
                 setRecentAppointments(appointmentsData);
 
             } catch (err) {
-                console.error('Erro ao carregar dados da Home:', err);
-                // Exibe o erro na interface
-                setError(`Erro ao carregar dados: ${err.message || 'Verifique sua conexão e tente novamente.'}`);
+                console.error('Erro ao carregar dados do dashboard:', err);
+                setError(err.message || 'Erro ao carregar dados do dashboard.');
             } finally {
-                setLoading(false); // Termina de carregar, mesmo se com erro
+                setLoading(false);
             }
         };
 
-        // Verifica se o usuário e a role estão disponíveis antes de carregar os dados
-        if (user && userRole) {
-            loadDashboardData();
-        }
-        // Dependências: recarrega se o usuário ou a role mudarem (o que não deve ocorrer após o login)
-    }, [user, userRole]); // Adicione user e userRole como dependências
+        loadDashboardData();
+    }, []);
 
-    // Renderização condicional:
+    const getStatusColorClass = (status) => {
+        switch (status) {
+            case 'agendado': return 'bg-primary';
+            case 'em_andamento': return 'bg-warning text-dark';
+            case 'concluido': return 'bg-success';
+            case 'cancelado': return 'bg-danger';
+            case 'pendente': return 'bg-secondary';
+            default: return 'bg-info';
+        }
+    };
+
+    const getStatusText = (status) => {
+        const statusMap = {
+            'agendado': 'Agendado',
+            'em_andamento': 'Em Andamento',
+            'concluido': 'Concluído',
+            'cancelado': 'Cancelado',
+            'pendente': 'Pendente',
+            // Adicione outras traduções conforme necessário
+        };
+        return statusMap[status] || status;
+    };
+
     if (loading) {
         return (
-            <div id="home-content" className="section-content active">
-                <p className="empty-state">Carregando dados da Home...</p>
-            </div>
+            <Container className="d-flex justify-content-center align-items-center min-vh-100">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Carregando...</span>
+                </Spinner>
+            </Container>
         );
     }
 
     if (error) {
         return (
-            <div id="home-content" className="section-content active">
-                <p className="empty-state" style={{ color: 'red' }}>{error}</p>
-                <p className="empty-state">Por favor, verifique o console do navegador e do backend para mais detalhes.</p>
-            </div>
+            <Container className="my-4">
+                <Alert variant="danger">
+                    <Alert.Heading>Erro ao Carregar Dashboard</Alert.Heading>
+                    <p>{error}</p>
+                </Alert>
+            </Container>
         );
     }
-
-    // Se não há dados, mas não está carregando nem com erro (ex: backend retornou vazio)
-    if (!stats) {
-        return (
-            <div id="home-content" className="section-content active">
-                <p className="empty-state">Nenhum dado disponível para a Home. Verifique se há dados no banco de dados.</p>
-            </div>
-        );
-    }
-
-    // Funções auxiliares para status (podem ser movidas para um arquivo utils/helpers.js)
-    const getStatusText = (status) => {
-        switch (status) {
-            case 'Confirmado': return 'Confirmado';
-            case 'Em Andamento': return 'Em Andamento';
-            case 'Pendente': return 'Pendente';
-            case 'Concluído': return 'Concluído';
-            case 'Cancelado': return 'Cancelado';
-            default: return status;
-        }
-    };
-
-    const getStatusColorClass = (status) => {
-        switch (status) {
-            case 'Confirmado': return 'status-confirmado';
-            case 'Em Andamento': return 'status-em-andamento';
-            case 'Pendente': return 'status-pendente';
-            case 'Concluído': return 'status-concluido';
-            case 'Cancelado': return 'status-cancelado';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
 
     return (
-        <div id="home-content" className="section-content active">
-            <h2>Bem-vindo, {user?.nome_usuario || 'Usuário'}!</h2>
-            <p>Esta é a página inicial da sua plataforma de gestão para **{user?.nome_empresa || 'Sua Empresa'}**.</p>
-            <p>Seu papel: <strong>{userRole}</strong></p>
-            <div id="home-stats" className="info-cards-grid mt-6">
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Total de Clientes</p>
-                            <p className="info-card-value">{stats.totalClientes}</p>
-                        </div>
-                        <div className="info-card-icon bg-blue-100">👤</div>
-                    </div>
-                </div>
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Agendamentos Hoje</p>
-                            <p className="info-card-value text-purple-600">{stats.agendamentosHoje}</p>
-                        </div>
-                        <div className="info-card-icon bg-purple-100">📅</div>
-                    </div>
-                </div>
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Serviços Concluídos (Mês)</p>
-                            <p className="info-card-value text-green-600">{stats.servicosConcluidosMes}</p>
-                        </div>
-                        <div className="info-card-icon bg-green-100">✅</div>
-                    </div>
-                </div>
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Faturamento Mensal</p>
-                            <p className="info-card-value text-blue-600">R$ {stats.faturamentoMensal}</p>
-                        </div>
-                        <div className="info-card-icon bg-blue-100">💲</div>
-                    </div>
-                </div>
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Média Avaliações</p>
-                            <p className="info-card-value text-yellow-600">{stats.mediaAvaliacoes} / 5</p>
-                        </div>
-                        <div className="info-card-icon bg-yellow-100">⭐</div>
-                    </div>
-                </div>
-                <div className="info-card">
-                    <div className="flex-between-center">
-                        <div>
-                            <p className="info-card-title">Total Avaliações</p>
-                            <p className="info-card-value text-gray-600">{stats.totalAvaliacoes}</p>
-                        </div>
-                        <div className="info-card-icon bg-gray-100">📝</div>
-                    </div>
-                </div>
-            </div>
+        <Container fluid className="my-4"> {/* Use Container fluid para ocupar a largura total */}
+            <h1 className="mb-4">Bem-vindo, {user?.nome_usuario || 'Usuário'}! 👋</h1>
 
-            <div className="card mt-6">
-                <h3 className="card-title">Próximos Agendamentos (Hoje)</h3>
-                <div id="recent-appointments-list">
-                    {recentAppointments.length === 0 ? (
-                        <p className="empty-state" style={{ padding: '20px', marginBottom: '0' }}>Nenhum agendamento para hoje.</p>
-                    ) : (
-                        recentAppointments.map(app => (
-                            <div key={app.cod_agendamento} className="list-item">
-                                <div className="list-item-main-info">
-                                    <p className="list-item-title">{app.cliente_nome}</p>
-                                    <p className="list-item-subtitle">{app.servico_nome} - {app.veiculo_modelo} ({app.veiculo_placa})</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="list-item-title">{new Date(app.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-                                    <span className={`status-badge ${getStatusColorClass(app.status)}`}>
-                                        {getStatusText(app.status)}
-                                    </span>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </div>
+            {/* Seção de Cards de Estatísticas */}
+            <Row className="mb-4">
+                <Col xs={12} md={6} lg={3} className="mb-3">
+                    <Card className="h-100"> {/* h-100 para cards de mesma altura */}
+                        <Card.Body>
+                            <Card.Title>📊 Agendamentos Hoje</Card.Title>
+                            <Card.Text className="fs-3 fw-bold">
+                                {stats?.agendamentosHoje || 0}
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col xs={12} md={6} lg={3} className="mb-3">
+                    <Card className="h-100">
+                        <Card.Body>
+                            <Card.Title>💰 Faturamento Mês</Card.Title>
+                            <Card.Text className="fs-3 fw-bold">
+                                R$ {stats?.faturamentoMes?.toFixed(2) || '0.00'}
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col xs={12} md={6} lg={3} className="mb-3">
+                    <Card className="h-100">
+                        <Card.Body>
+                            <Card.Title>👥 Clientes Cadastrados</Card.Title>
+                            <Card.Text className="fs-3 fw-bold">
+                                {stats?.totalClientes || 0}
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col xs={12} md={6} lg={3} className="mb-3">
+                    <Card className="h-100">
+                        <Card.Body>
+                            <Card.Title>🛠️ Serviços Mais Vendidos</Card.Title>
+                            <Card.Text className="fs-3 fw-bold">
+                                {stats?.servicoMaisVendido || 'Nenhum'}
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+
+            {/* Seção de Próximos Agendamentos */}
+            <Row>
+                <Col xs={12}>
+                    <Card>
+                        <Card.Header><h3 className="card-title mb-0">Próximos Agendamentos (Hoje)</h3></Card.Header>
+                        <ListGroup variant="flush">
+                            {recentAppointments.length === 0 ? (
+                                <ListGroup.Item className="text-center text-muted py-4">Nenhum agendamento para hoje.</ListGroup.Item>
+                            ) : (
+                                recentAppointments.map(app => (
+                                    <ListGroup.Item key={app.cod_agendamento} className="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p className="fw-bold mb-1">{app.cliente_nome}</p>
+                                            <p className="text-muted mb-0">{app.servico_nome} - {app.veiculo_modelo} ({app.veiculo_placa})</p>
+                                        </div>
+                                        <div className="text-end">
+                                            <p className="fw-bold mb-1">{new Date(app.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                                            <span className={`badge ${getStatusColorClass(app.status)}`}>
+                                                {getStatusText(app.status)}
+                                            </span>
+                                        </div>
+                                    </ListGroup.Item>
+                                ))
+                            )}
+                        </ListGroup>
+                    </Card>
+                </Col>
+            </Row>
+        </Container>
     );
 };
 

@@ -102,7 +102,6 @@ const AppHeader = ({ user, isDesktopSidebarCollapsed, toggleSidebar }) => {
         <header className="app-main-header">
             <div className="header-greeting">
                 <h1 className="header-title">Bem-vindo, {user?.nome_usuario || 'Usuário'}! 👋</h1>
-                <p className="header-subtitle">Sistema de gestão para estéticas automotivas</p>
             </div>
         </header>
     );

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
-// Importe componentes do react-bootstrap
-import { Container, Row, Col, Card, Spinner, Alert, ListGroup } from 'react-bootstrap';
+// Importe componentes do react-bootstrap (alguns podem ser removidos se não forem mais usados)
+import { Spinner, Alert, ListGroup } from 'react-bootstrap';
+
+// Importar ícones do Lucide React
+import { Calendar, DollarSign, Users, TrendingUp, BarChart, Clock, CheckCircle } from 'lucide-react';
+
 
 const HomePage = () => {
     const [stats, setStats] = useState(null);
@@ -38,17 +42,19 @@ const HomePage = () => {
         loadDashboardData();
     }, []);
 
+    // Função para determinar a classe de cor do status (mantida para reuso)
     const getStatusColorClass = (status) => {
         switch (status) {
-            case 'agendado': return 'bg-primary';
-            case 'em_andamento': return 'bg-warning text-dark';
-            case 'concluido': return 'bg-success';
-            case 'cancelado': return 'bg-danger';
-            case 'pendente': return 'bg-secondary';
-            default: return 'bg-info';
+            case 'agendado': return 'status-confirmado'; // Usar a classe sem bg- ou text-
+            case 'em_andamento': return 'status-em-andamento';
+            case 'concluido': return 'status-concluido';
+            case 'cancelado': return 'status-cancelado';
+            case 'pendente': return 'status-pendente';
+            default: return 'status-inativo';
         }
     };
 
+    // Função para obter o texto do status (mantida para reuso)
     const getStatusText = (status) => {
         const statusMap = {
             'agendado': 'Agendado',
@@ -56,109 +62,142 @@ const HomePage = () => {
             'concluido': 'Concluído',
             'cancelado': 'Cancelado',
             'pendente': 'Pendente',
-            // Adicione outras traduções conforme necessário
         };
         return statusMap[status] || status;
     };
 
+
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center min-vh-100">
+            <div className="loading-screen">
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Carregando...</span>
                 </Spinner>
-            </Container>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Container className="my-4">
-                <Alert variant="danger">
-                    <Alert.Heading>Erro ao Carregar Dashboard</Alert.Heading>
-                    <p>{error}</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4">
+                <h3>Erro ao Carregar Dashboard</h3>
+                <p>{error}</p>
+            </div>
         );
     }
 
     return (
-        <Container fluid className="my-4"> {/* Use Container fluid para ocupar a largura total */}
-            <h1 className="mb-4">Bem-vindo, {user?.nome_usuario || 'Usuário'}! 👋</h1>
+        <div className="page-container"> {/* Container geral da página */}
+            {/* O cabeçalho principal "Bem-vindo, {user?.nome_usuario}!" agora está no AppHeader */}
+            {/* <h1 className="mb-4">Bem-vindo, {user?.nome_usuario || 'Usuário'}! 👋</h1> */}
 
             {/* Seção de Cards de Estatísticas */}
-            <Row className="mb-4">
-                <Col xs={12} md={6} lg={3} className="mb-3">
-                    <Card className="h-100"> {/* h-100 para cards de mesma altura */}
-                        <Card.Body>
-                            <Card.Title>📊 Agendamentos Hoje</Card.Title>
-                            <Card.Text className="fs-3 fw-bold">
-                                {stats?.agendamentosHoje || 0}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col xs={12} md={6} lg={3} className="mb-3">
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Card.Title>💰 Faturamento Mês</Card.Title>
-                            <Card.Text className="fs-3 fw-bold">
-                                R$ {stats?.faturamentoMes?.toFixed(2) || '0.00'}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col xs={12} md={6} lg={3} className="mb-3">
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Card.Title>👥 Clientes Cadastrados</Card.Title>
-                            <Card.Text className="fs-3 fw-bold">
-                                {stats?.totalClientes || 0}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col xs={12} md={6} lg={3} className="mb-3">
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Card.Title>🛠️ Serviços Mais Vendidos</Card.Title>
-                            <Card.Text className="fs-3 fw-bold">
-                                {stats?.servicoMaisVendido || 'Nenhum'}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+            <div className="info-cards-grid">
+                {/* Card: Total de Agendamentos Hoje */}
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-blue-100">
+                            <Calendar size={24} className="text-blue-600" />
+                        </div>
+                        <span className="info-card-title">Agendamentos Hoje</span>
+                    </div>
+                    <div className="info-card-value">{stats?.agendamentosHoje || 0}</div>
+                </div>
+
+                {/* Card: Faturamento Mensal */}
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-green-100">
+                            <DollarSign size={24} className="text-green-600" />
+                        </div>
+                        <span className="info-card-title">Faturamento Mês</span>
+                    </div>
+                    <div className="info-card-value">R$ {parseFloat(stats?.faturamentoMes || 0).toFixed(2).replace('.', ',')}</div>
+                </div>
+
+                {/* Card: Clientes Cadastrados */}
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-purple-100">
+                            <Users size={24} className="text-purple-600" />
+                        </div>
+                        <span className="info-card-title">Clientes Cadastrados</span>
+                    </div>
+                    <div className="info-card-value">{stats?.totalClientes || 0}</div>
+                </div>
+
+                {/* Card: Serviços Concluídos (Mês) */}
+                 <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-yellow-100">
+                            <CheckCircle size={24} className="text-yellow-600" /> {/* Ícone de verificação para serviços concluídos */}
+                        </div>
+                        <span className="info-card-title">Serviços Concluídos (Mês)</span>
+                    </div>
+                    <div className="info-card-value">{stats?.servicosConcluidosMes || 0}</div>
+                </div>
+
+                {/* Card: Média de Avaliações (exemplo adicional) */}
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-red-status"> {/* Usando red-status para um visual diferente */}
+                            <BarChart size={24} className="text-red-text" />
+                        </div>
+                        <span className="info-card-title">Média de Avaliações</span>
+                    </div>
+                    {/* CORREÇÃO AQUI: Garante que stats?.mediaAvaliacoes seja um número antes de toFixed */}
+                    <div className="info-card-value">
+                        {typeof stats?.mediaAvaliacoes === 'number'
+                            ? stats.mediaAvaliacoes.toFixed(1)
+                            : 'N/A'}{' '}
+                        <span style={{fontSize: '0.8em', color: '#ffc107'}}>⭐</span>
+                    </div>
+                </div>
+
+                {/* Card: Total de Avaliações (exemplo adicional) */}
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-green-status"> {/* Usando green-status para um visual diferente */}
+                            <TrendingUp size={24} className="text-green-text" />
+                        </div>
+                        <span className="info-card-title">Total de Avaliações</span>
+                    </div>
+                    <div className="info-card-value">{stats?.totalAvaliacoes || 0}</div>
+                </div>
+            </div>
 
             {/* Seção de Próximos Agendamentos */}
-            <Row>
-                <Col xs={12}>
-                    <Card>
-                        <Card.Header><h3 className="card-title mb-0">Próximos Agendamentos (Hoje)</h3></Card.Header>
-                        <ListGroup variant="flush">
-                            {recentAppointments.length === 0 ? (
-                                <ListGroup.Item className="text-center text-muted py-4">Nenhum agendamento para hoje.</ListGroup.Item>
-                            ) : (
-                                recentAppointments.map(app => (
-                                    <ListGroup.Item key={app.cod_agendamento} className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <p className="fw-bold mb-1">{app.cliente_nome}</p>
-                                            <p className="text-muted mb-0">{app.servico_nome} - {app.veiculo_modelo} ({app.veiculo_placa})</p>
-                                        </div>
-                                        <div className="text-end">
-                                            <p className="fw-bold mb-1">{new Date(app.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-                                            <span className={`badge ${getStatusColorClass(app.status)}`}>
-                                                {getStatusText(app.status)}
-                                            </span>
-                                        </div>
-                                    </ListGroup.Item>
-                                ))
-                            )}
-                        </ListGroup>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+            <div className="card">
+                <div className="card-header">
+                    <h3 className="card-title">Próximos Agendamentos (Hoje)</h3>
+                </div>
+                <div className="card-content">
+                    <ListGroup variant="flush">
+                        {recentAppointments.length === 0 ? (
+                            <ListGroup.Item className="text-center text-muted py-4">Nenhum agendamento para hoje.</ListGroup.Item>
+                        ) : (
+                            recentAppointments.map(app => (
+                                <ListGroup.Item key={app.cod_agendamento} className="list-item">
+                                    <div className="list-item-main-info">
+                                        <p className="list-item-title">{app.cliente_nome}</p>
+                                        <p className="list-item-subtitle">{app.servico_nome} - {app.veiculo_modelo} ({app.veiculo_placa})</p>
+                                    </div>
+                                    <div className="list-item-actions">
+                                        <span className="list-item-subtitle me-2">
+                                            <Clock size={16} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
+                                            {new Date(app.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                        <span className={`status-badge ${getStatusColorClass(app.status)}`}>
+                                            {getStatusText(app.status)}
+                                        </span>
+                                    </div>
+                                </ListGroup.Item>
+                            ))
+                        )}
+                    </ListGroup>
+                </div>
+            </div>
+        </div>
     );
 };
 

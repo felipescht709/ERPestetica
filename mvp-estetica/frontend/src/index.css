@@ -54,15 +54,34 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* REMOVIDO: max-width, margin: 0 auto, padding e text-align do #root */
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+} */
+
+/* Adicionei algumas regras para #root e body que são importantes para o layout flex */
+#root {
+  width: 100%; /* Garante que #root ocupe 100% da largura disponível */
+  height: 100%; /* Garante que #root ocupe 100% da altura disponível */
+  display: flex; /* Essencial para o flexbox funcionar com o app-container */
+  flex-direction: column; /* Essencial para o flexbox funcionar com o app-container */
+}
+
+/* Remover place-items: center do body que pode centralizar indevidamente */
+body {
+    display: flex;
+    flex-direction: column;
+    min-width: 320px;
+    min-height: 100vh;
 }

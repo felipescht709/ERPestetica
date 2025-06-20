@@ -2,11 +2,12 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import api from '../utils/api'; // Sua função para chamadas de API autenticadas
 import { AuthContext } from '../context/AuthContext';
-import {
-    Container, Row, Col, Card, Form, Button,
-    Table, Spinner, Alert
-} from 'react-bootstrap';
-import moment from 'moment'; // Para manipulação de datas
+// Importar o moment
+import moment from 'moment';
+// Importar ícones do Lucide React
+import { DollarSign, BarChart, TrendingUp, TrendingDown, Clock, Calendar, CheckSquare, XCircle, FileText } from 'lucide-react';
+import { Spinner, Alert, Table } from 'react-bootstrap'; // Manter Spinner e Alert do react-bootstrap
+
 
 const FinanceiroPage = () => {
     const { userRole } = useContext(AuthContext);
@@ -16,6 +17,7 @@ const FinanceiroPage = () => {
         totalRevenue: 0,
         totalCost: 0,
         grossProfit: 0,
+        margin: 0, // Nova métrica para margem de lucro
     });
     const [transactions, setTransactions] = useState([]);
     // Define o período inicial como o mês atual
@@ -31,10 +33,20 @@ const FinanceiroPage = () => {
             // Requisição para o resumo financeiro
             // ATENÇÃO: Você precisará criar a rota /api/financeiro/resumo no seu backend!
             const summaryData = await api(`/financeiro/resumo?startDate=${startDate}&endDate=${endDate}`, { method: 'GET' });
+            
+            const totalRevenue = parseFloat(summaryData.total_revenue) || 0;
+            const totalMaterialCost = parseFloat(summaryData.total_material_cost) || 0;
+            const totalLaborCost = parseFloat(summaryData.total_labor_cost) || 0;
+            const totalCost = totalMaterialCost + totalLaborCost;
+            const grossProfit = totalRevenue - totalCost;
+            const margin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+
             setSummary({
-                totalRevenue: parseFloat(summaryData.total_revenue) || 0,
-                totalCost: (parseFloat(summaryData.total_material_cost) || 0) + (parseFloat(summaryData.total_labor_cost) || 0),
-                grossProfit: (parseFloat(summaryData.total_revenue) || 0) - ((parseFloat(summaryData.total_material_cost) || 0) + (parseFloat(summaryData.total_labor_cost) || 0)),
+                totalRevenue,
+                totalCost,
+                grossProfit,
+                margin,
             });
 
             // Requisição para as transações detalhadas (agendamentos concluídos)
@@ -62,161 +74,144 @@ const FinanceiroPage = () => {
     // Renderização condicional para estados de carregamento, erro ou acesso negado
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center min-vh-100">
+            <div className="loading-screen">
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Carregando dados financeiros...</span>
                 </Spinner>
-            </Container>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Container className="my-4">
-                <Alert variant="danger">
-                    <Alert.Heading>Erro ao Carregar Financeiro</Alert.Heading>
-                    <p>{error}</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4">
+                <h3>Erro ao Carregar Financeiro</h3>
+                <p>{error}</p>
+            </div>
         );
     }
 
     if (!canViewFinance) {
         return (
-            <Container className="my-4">
-                <Alert variant="warning">
-                    <Alert.Heading>Acesso Negado</Alert.Heading>
-                    <p>Você não tem permissão para visualizar esta página.</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4">
+                <h3>Acesso Negado</h3>
+                <p>Você não tem permissão para visualizar esta página.</p>
+            </div>
         );
     }
 
     return (
-        <Container fluid className="my-4">
-            <Row className="mb-3 align-items-center">
-                <Col>
-                    <h1>💰 Controle Financeiro</h1>
-                </Col>
-            </Row>
+        <div className="page-container">
+            <div className="page-section-header">
+                <h2><DollarSign size={28} style={{verticalAlign: 'middle', marginRight: '10px'}} /> Controle Financeiro</h2>
+                {/* O botão de "Aplicar Filtro" agora fica dentro do bloco de filtros */}
+            </div>
 
             {/* Filtros de Data */}
-            <Card className="mb-4 shadow-sm">
-                <Card.Header><h4 className="card-title mb-0">Filtrar por Período</h4></Card.Header>
-                <Card.Body>
-                    <Form>
-                        <Row className="align-items-end">
-                            <Col md={5} className="mb-3 mb-md-0">
-                                <Form.Group controlId="startDate">
-                                    <Form.Label>Data de Início:</Form.Label>
-                                    <Form.Control
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={5} className="mb-3 mb-md-0">
-                                <Form.Group controlId="endDate">
-                                    <Form.Label>Data de Fim:</Form.Label>
-                                    <Form.Control
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={2}>
-                                <Button variant="primary" onClick={fetchFinancialData} className="w-100">
-                                    Aplicar Filtro
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Card.Body>
-            </Card>
+            <div className="section-content mb-4"> {/* Usando section-content para o card de filtros */}
+                <h4 className="card-title mb-3">Filtrar por Período</h4>
+                <div className="filter-controls">
+                    <label>
+                        De:
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="input-field"
+                        />
+                    </label>
+                    <label>
+                        Até:
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="input-field"
+                        />
+                    </label>
+                    <button className="button-primary" onClick={fetchFinancialData}>
+                        Aplicar Filtro
+                    </button>
+                </div>
+            </div>
 
             {/* Resumo Financeiro */}
-            <Row className="mb-4">
-                <Col md={4} className="mb-3">
-                    <Card className="text-center bg-primary text-white h-100 shadow-sm">
-                        <Card.Body>
-                            <Card.Title className="fs-5">Receita Total</Card.Title>
-                            <Card.Text className="fs-2 fw-bold">
-                                R$ {summary.totalRevenue.toFixed(2).replace('.', ',')}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} className="mb-3">
-                    <Card className="text-center bg-danger text-white h-100 shadow-sm">
-                        <Card.Body>
-                            <Card.Title className="fs-5">Custo Total de Serviços</Card.Title>
-                            <Card.Text className="fs-2 fw-bold">
-                                R$ {summary.totalCost.toFixed(2).replace('.', ',')}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} className="mb-3">
-                    <Card className="text-center bg-success text-white h-100 shadow-sm">
-                        <Card.Body>
-                            <Card.Title className="fs-5">Lucro Bruto</Card.Title>
-                            <Card.Text className="fs-2 fw-bold">
-                                R$ {summary.grossProfit.toFixed(2).replace('.', ',')}
-                            </Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+            <div className="info-cards-grid mb-4">
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-green-100">
+                            <TrendingUp size={24} className="text-green-600" />
+                        </div>
+                        <span className="info-card-title">Receita Total</span>
+                    </div>
+                    <div className="info-card-value">R$ {summary.totalRevenue.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-red-status"> {/* Reutilizando cor de status para custo */}
+                            <TrendingDown size={24} className="text-red-text" />
+                        </div>
+                        <span className="info-card-title">Custos Totais</span>
+                    </div>
+                    <div className="info-card-value">R$ {summary.totalCost.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-blue-100">
+                            <BarChart size={24} className="text-blue-600" />
+                        </div>
+                        <span className="info-card-title">Lucro Líquido</span>
+                    </div>
+                    <div className="info-card-value">R$ {summary.grossProfit.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div className="info-card">
+                    <div className="flex-between-center mb-3">
+                        <div className="info-card-icon bg-purple-100">
+                            <DollarSign size={24} className="text-purple-600" />
+                        </div>
+                        <span className="info-card-title">Margem de Lucro</span>
+                    </div>
+                    <div className="info-card-value">{summary.margin.toFixed(2).replace('.', ',')}%</div>
+                </div>
+            </div>
 
             {/* Detalhes das Transações */}
-            <Row>
-                <Col xs={12}>
-                    <Card className="shadow-sm">
-                        <Card.Header><h4 className="card-title mb-0">Transações Concluídas ({moment(startDate).format('DD/MM/YYYY')} - {moment(endDate).format('DD/MM/YYYY')})</h4></Card.Header>
-                        <Card.Body>
-                            <div className="table-responsive">
-                                <Table striped bordered hover className="mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Data/Hora</th>
-                                            <th>Cliente</th>
-                                            <th>Serviço</th>
-                                            <th>Preço Total</th>
-                                            <th>Forma Pagamento</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {transactions.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="6" className="text-center text-muted py-3">Nenhuma transação encontrada no período selecionado.</td>
-                                            </tr>
-                                        ) : (
-                                            transactions.map((transaction) => (
-                                                <tr key={transaction.cod_agendamento}>
-                                                    <td>{moment(transaction.data_hora_fim).format('DD/MM/YYYY HH:mm')}</td>
-                                                    <td>{transaction.cliente_nome}</td> {/* Assumindo que o backend pode retornar `cliente_nome` via JOIN */}
-                                                    <td>{transaction.servico_nome}</td> {/* Assumindo que o backend pode retornar `servico_nome` via JOIN */}
-                                                    <td>R$ {parseFloat(transaction.preco_total).toFixed(2).replace('.', ',')}</td>
-                                                    <td>{transaction.forma_pagamento || 'N/A'}</td>
-                                                    <td>
-                                                        <span className={`badge bg-${transaction.status === 'concluido' ? 'success' : 'secondary'}`}>
-                                                            {transaction.status}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </div>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+            <div className="section-content"> {/* Adicionado section-content para o estilo de card */}
+                <h4 className="card-title mb-3">Transações Concluídas ({moment(startDate).format('DD/MM/YYYY')} - {moment(endDate).format('DD/MM/YYYY')})</h4>
+                <div className="table-responsive">
+                    <Table striped bordered hover className="clients-table"> {/* Reutilizando clients-table para estilização */}
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Cliente</th>
+                                <th>Serviço</th>
+                                <th>Preço Total</th>
+                                <th>Forma Pagamento</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {transactions.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="empty-state-table">Nenhuma transação encontrada no período selecionado.</td>
+                                </tr>
+                            ) : (
+                                transactions.map((transaction) => (
+                                    <tr key={transaction.cod_agendamento}>
+                                        <td>{moment(transaction.data_hora_fim).format('DD/MM/YYYY HH:mm')}</td><td>{transaction.cliente_nome}</td><td>{transaction.servico_nome}</td><td>R$ {parseFloat(transaction.preco_total).toFixed(2).replace('.', ',')}</td><td>{transaction.forma_pagamento || 'N/A'}</td>
+                                        <td>
+                                            <span className={`status-badge ${transaction.status === 'concluido' ? 'status-concluido' : 'status-inativo'}`}>
+                                                {transaction.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+            </div>
+        </div>
     );
 };
 

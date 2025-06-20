@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/usuarios');
 const configuracoesAgendaRoutes = require('./routes/configuracoesAgenda'); 
 const financeiroRoutes = require('./routes/financeiro');
+const ordensServicoRoutes = require('./routes/ordens_servico');
 
 // Middlewares
 const corsOptions = {
@@ -33,6 +34,7 @@ app.use('/api/home', homeRoutes);
 app.use('/api/usuarios', userRoutes);
 app.use('/api/agenda/config', configuracoesAgendaRoutes); 
 app.use('/api/financeiro', financeiroRoutes);
+app.use('/api/ordens_servico', ordensServicoRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {

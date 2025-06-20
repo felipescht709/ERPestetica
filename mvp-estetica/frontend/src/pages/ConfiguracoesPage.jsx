@@ -3,6 +3,9 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import moment from 'moment';
+// Importar ícones do Lucide React
+import { Settings, Plus, XCircle } from 'lucide-react';
+
 
 const ConfiguracoesPage = () => {
     const [rules, setRules] = useState([]);
@@ -82,7 +85,7 @@ const ConfiguracoesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!canManageConfig) {
-            alert('Você não tem permissão para salvar configurações.');
+            alert('Você não tem permissão para salvar configurações.'); // Usar modal customizado
             return;
         }
 
@@ -95,36 +98,36 @@ const ConfiguracoesPage = () => {
             payload.data_especifica = payload.data_especifica || null; // Envia null se vazio
 
             // Lógica de validação frontend aprimorada
-            if (!payload.tipo_regra) { alert('Tipo de regra é obrigatório.'); return; }
+            if (!payload.tipo_regra) { alert('Tipo de regra é obrigatório.'); return; } // Usar modal customizado
             if (['horario_operacao_padrao', 'horario_almoco'].includes(payload.tipo_regra)) {
                 if (payload.dia_semana === null || !payload.hora_inicio || !payload.hora_fim) {
-                    alert('Para horários de operação/almoço, Dia da Semana, Hora de Início e Hora de Fim são obrigatórios.'); return;
+                    alert('Para horários de operação/almoço, Dia da Semana, Hora de Início e Hora de Fim são obrigatórios.'); return; // Usar modal customizado
                 }
                 if (payload.tipo_regra === 'horario_operacao_padrao' && payload.capacidade_simultanea === null) {
-                    alert('Para Horário de Funcionamento, a Capacidade Simultânea é obrigatória.'); return;
+                    alert('Para Horário de Funcionamento, a Capacidade Simultânea é obrigatória.'); return; // Usar modal customizado
                 }
             }
             if (['feriado_fixo', 'feriado_movel', 'excecao_dia_especifico'].includes(payload.tipo_regra) && !payload.data_especifica) {
-                alert('Para feriados ou exceções, a Data Específica é obrigatória.'); return;
+                alert('Para feriados ou exceções, a Data Específica é obrigatória.'); return; // Usar modal customizado
             }
             if (payload.tipo_regra === 'intervalo_entre_agendamentos' && payload.intervalo_minutos === null) {
-                alert('Para intervalo entre agendamentos, o número de minutos é obrigatório e deve ser positivo.'); return;
+                alert('Para intervalo entre agendamentos, o número de minutos é obrigatório e deve ser positivo.'); return; // Usar modal customizado
             }
 
 
             let res;
             if (formMode === 'create') {
                 res = await api('/agenda/config', { method: 'POST', body: payload });
-                alert('Regra criada com sucesso!');
+                alert('Regra criada com sucesso!'); // Usar modal customizado
             } else { // formMode === 'edit'
                 res = await api(`/agenda/config/${selectedRule.cod_configuracao}`, { method: 'PUT', body: payload });
-                alert('Regra atualizada com sucesso!');
+                alert('Regra atualizada com sucesso!'); // Usar modal customizado
             }
             resetForm();
             fetchRules(); // Recarrega a lista
         } catch (err) {
             console.error('Erro ao salvar regra:', err);
-            alert(`Erro ao salvar regra: ${err.message || 'Verifique sua conexão.'}`);
+            alert(`Erro ao salvar regra: ${err.message || 'Verifique sua conexão.'}`); // Usar modal customizado
         }
     };
 
@@ -148,17 +151,17 @@ const ConfiguracoesPage = () => {
     // Handler para deletar uma regra
     const handleDelete = async (cod_configuracao) => {
         if (!canManageConfig) {
-            alert('Você não tem permissão para deletar configurações.');
+            alert('Você não tem permissão para deletar configurações.'); // Usar modal customizado
             return;
         }
-        if (window.confirm('Tem certeza que deseja deletar esta regra?')) {
+        if (window.confirm('Tem certeza que deseja deletar esta regra?')) { // Usar modal customizado
             try {
                 await api(`/agenda/config/${cod_configuracao}`, { method: 'DELETE' });
-                alert('Regra deletada com sucesso!');
+                alert('Regra deletada com sucesso!'); // Usar modal customizado
                 fetchRules();
             } catch (err) {
                 console.error('Erro ao deletar regra:', err);
-                alert(`Erro ao deletar regra: ${err.message || 'Verifique sua conexão.'}`);
+                alert(`Erro ao deletar regra: ${err.message || 'Verifique sua conexão.'}`); // Usar modal customizado
             }
         }
     };
@@ -171,35 +174,41 @@ const ConfiguracoesPage = () => {
 
     if (loading) {
         return (
-            <div id="config-page-content" className="section-content active">
-                <p className="empty-state">Carregando configurações...</p>
+            <div className="section-content active empty-state">
+                <p>Carregando configurações...</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div id="config-page-content" className="section-content active">
-                <p className="empty-state" style={{ color: 'red' }}>{error}</p>
+            <div className="section-content active alert error">
+                <p>{error}</p>
             </div>
         );
     }
 
     if (!canManageConfig && !loading && !error) { // Mostrar mensagem de permissão negada apenas se não estiver carregando/com erro geral
         return (
-            <div id="config-page-content" className="section-content active">
-                <p className="empty-state" style={{ color: 'red' }}>Você não tem permissão para acessar as configurações.</p>
+            <div className="section-content active alert error">
+                <p>Você não tem permissão para acessar as configurações.</p>
             </div>
         );
     }
 
     return (
-        <div id="config-page-content" className="section-content active">
-            <h2>Configurações</h2>
-            <p className="page-subtitle">Gerencie as configurações gerais do sistema e as regras da agenda.</p>
+        <div className="page-container">
+            <div className="page-section-header">
+                <h2><Settings size={28} style={{verticalAlign: 'middle', marginRight: '10px'}} /> Configurações</h2>
+                {formMode === 'edit' && (
+                     <button type="button" className="btn-primary-dark" onClick={resetForm}>
+                        <Plus size={20} /> Adicionar Nova Regra
+                    </button>
+                )}
+            </div>
 
             {/* Seção de Configuração da Agenda */}
-            <div className="card mb-6">
+            <div className="card mb-6 section-content"> {/* Adicionado section-content para o estilo de card */}
                 <div className="card-header">
                     <h3 className="card-title">{formMode === 'create' ? 'Adicionar Nova Regra de Agenda' : 'Editar Regra de Agenda'}</h3>
                 </div>
@@ -282,11 +291,6 @@ const ConfiguracoesPage = () => {
                         )}
 
                         <div className="form-group">
-                            <label htmlFor="descricao">Descrição (opcional):</label>
-                            <input type="text" name="descricao" id="descricao" value={formData.descricao} onChange={handleChange} className="input-field" />
-                        </div>
-
-                        <div className="form-group">
                             <input type="checkbox" name="ativo" id="ativo" checked={formData.ativo} onChange={handleChange} />
                             <label htmlFor="ativo" style={{ display: 'inline-block', marginLeft: '10px' }}>Regra Ativa</label>
                         </div>
@@ -304,7 +308,7 @@ const ConfiguracoesPage = () => {
             </div>
 
             {/* Listagem das Regras Existentes */}
-            <div className="card mt-6">
+            <div className="card mt-6 section-content"> {/* Adicionado section-content para o estilo de card */}
                 <div className="card-header">
                     <h3 className="card-title">Regras de Configuração Atuais</h3>
                 </div>
@@ -331,8 +335,12 @@ const ConfiguracoesPage = () => {
                                         <span className={`status-badge ${rule.ativo ? 'status-confirmado' : 'status-inativo'}`}>
                                             {rule.ativo ? 'Ativo' : 'Inativo'}
                                         </span>
-                                        <button onClick={() => handleEdit(rule)} className="button-primary edit-button">Editar</button>
-                                        <button onClick={() => handleDelete(rule.cod_configuracao)} className="button-secondary delete-button">Deletar</button>
+                                        <button onClick={() => handleEdit(rule)} className="btn-action" title="Editar">
+                                            <Edit size={18} />
+                                        </button>
+                                        <button onClick={() => handleDelete(rule.cod_configuracao)} className="btn-action btn-delete" title="Deletar">
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -340,20 +348,6 @@ const ConfiguracoesPage = () => {
                     )}
                 </div>
             </div>
-
-            {/* Futuras seções de configuração: */}
-            {/* <div className="card mt-6">
-                <div className="card-header"><h3 className="card-title">Gestão de Usuários (Básico)</h3></div>
-                <div className="card-content">
-                    <p className="empty-state">Funcionalidade de gestão de usuários será integrada aqui para admins.</p>
-                </div>
-            </div>
-            <div className="card mt-6">
-                <div className="card-header"><h3 className="card-title">Configurações Gerais do Sistema</h3></div>
-                <div className="card-content">
-                    <p className="empty-state">Outras regras de negócio e configurações do sistema.</p>
-                </div>
-            </div> */}
         </div>
     );
 };

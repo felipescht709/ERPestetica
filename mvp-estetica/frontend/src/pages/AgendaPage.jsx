@@ -9,8 +9,14 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import AppointmentModal from '../components/AppointmentModal';
 
-// Importe componentes do react-bootstrap
-import { Container, Row, Col, Button, Spinner, Alert } from 'react-bootstrap';
+// Importe componentes do react-bootstrap que AINDA SÃO USADOS.
+// Removi Container, Row, Col, Button, pois estamos usando div's e classes CSS customizadas,
+// e o botão agora tem uma nova classe de estilo.
+import { Spinner, Alert } from 'react-bootstrap'; 
+
+// Importar ícones do Lucide React
+import { Plus, Calendar as CalendarIcon } from 'lucide-react'; // Renomear Calendar do Lucide para evitar conflito
+
 
 moment.locale('pt-br');
 const localizer = momentLocalizer(moment);
@@ -30,7 +36,7 @@ localizer.formats = {
     agendaTimeFormat: 'HH:mm',
     agendaTimeRangeFormat: ({ start, end }, culture, local) =>
         local.format(start, 'HH:mm', culture) + ' - ' + local.format(end, 'HH:mm', culture),
-    monthHeaderFormat: 'MMMM YYYY',
+    monthHeaderFormat: 'MMMM',
     dayHeaderFormat: 'dddd, DD/MM',
     weekHeaderFormat: (momentA, momentB, culture, local) =>
         local.format(momentA, 'DD/MM', culture) + ' - ' + local.format(momentB, 'DD/MM', culture),
@@ -79,7 +85,7 @@ const AgendaPage = () => {
 
     const handleSelectSlot = useCallback(({ start, end }) => {
         if (!canCreateEdit) {
-            alert('Você não tem permissão para criar agendamentos.');
+            alert('Você não tem permissão para criar agendamentos.'); // Considerar usar um modal customizado
             return;
         }
         setSelectedAppointment({
@@ -108,74 +114,66 @@ const AgendaPage = () => {
 
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center min-vh-100">
+            <div className="loading-screen"> {/* Usando classe CSS customizada */}
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Carregando agenda...</span>
                 </Spinner>
-            </Container>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Container className="my-4">
-                <Alert variant="danger">
-                    <Alert.Heading>Erro ao Carregar Agenda</Alert.Heading>
-                    <p>{error}</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4"> {/* Usando classe CSS customizada */}
+                <h3>Erro ao Carregar Agenda</h3>
+                <p>{error}</p>
+            </div>
         );
     }
 
     return (
-        <Container fluid className="my-4">
-            <Row className="mb-3 align-items-center">
-                <Col>
-                    <h1>📅 Agenda de Agendamentos</h1>
-                </Col>
+        <div className="page-container">
+            <div className="page-section-header">
+                <h2><CalendarIcon size={28} style={{verticalAlign: 'middle', marginRight: '10px'}} /> Agenda de Agendamentos</h2>
                 {canCreateEdit && (
-                    <Col xs="auto">
-                        <Button variant="primary" onClick={() => handleSelectSlot({ start: new Date(), end: new Date(new Date().setHours(new Date().getHours() + 1)) })}>
-                            + Novo Agendamento
-                        </Button>
-                    </Col>
+                    <button className="btn-primary-dark" onClick={() => handleSelectSlot({ start: new Date(), end: new Date(new Date().setHours(new Date().getHours() + 1)) })}>
+                        <Plus size={20} />
+                        Novo Agendamento
+                    </button>
                 )}
-            </Row>
-            <Row>
-                <Col xs={12}>
-                    <div style={{ height: '80vh' }} className="calendar-container shadow-sm p-3 bg-white rounded"> {/* Altura responsiva */}
-                        <Calendar
-                            localizer={localizer}
-                            events={events}
-                            startAccessor="start"
-                            endAccessor="end"
-                            selectable
-                            onSelectEvent={handleSelectEvent}
-                            onSelectSlot={handleSelectSlot}
-                            onNavigate={handleNavigate}
-                            onView={handleView}
-                            view={currentView} // Controla a view com estado
-                            date={currentViewDate} // Controla a data com estado
-                            culture='pt-br'
-                            messages={{
-                                allDay: 'Dia Inteiro',
-                                previous: 'Anterior',
-                                next: 'Próximo',
-                                today: 'Hoje',
-                                month: 'Mês',
-                                week: 'Semana',
-                                day: 'Dia',
-                                agenda: 'Lista',
-                                date: 'Data',
-                                time: 'Hora',
-                                event: 'Evento',
-                                noEventsInRange: 'Nenhum agendamento neste período.',
-                                showMore: total => `+ Ver mais (${total})`
-                            }}
-                        />
-                    </div>
-                </Col>
-            </Row>
+            </div>
+
+            <div style={{ height: '80vh' }} className="calendar-container section-content"> {/* Altura responsiva */}
+                <Calendar
+                    localizer={localizer}
+                    events={events}
+                    startAccessor="start"
+                    endAccessor="end"
+                    selectable
+                    onSelectEvent={handleSelectEvent}
+                    onSelectSlot={handleSelectSlot}
+                    onNavigate={handleNavigate}
+                    onView={handleView}
+                    view={currentView} // Controla a view com estado
+                    date={currentViewDate} // Controla a data com estado
+                    culture='pt-br'
+                    messages={{
+                        allDay: 'Dia Inteiro',
+                        previous: 'Anterior',
+                        next: 'Próximo',
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana',
+                        day: 'Dia',
+                        agenda: 'Lista',
+                        date: 'Data',
+                        time: 'Hora',
+                        event: 'Evento',
+                        noEventsInRange: 'Nenhum agendamento neste período.',
+                        showMore: total => `+ Ver mais (${total})`
+                    }}
+                />
+            </div>
 
             {showModal && (
                 <AppointmentModal
@@ -192,7 +190,7 @@ const AgendaPage = () => {
                     }}
                 />
             )}
-        </Container>
+        </div>
     );
 };
 

@@ -1,11 +1,7 @@
 // frontend/src/App.jsx
-import React, { useContext } from 'react';
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import React, { useContext, useState, useEffect } from 'react';
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
-import { Navbar, Nav, Container, Button } from 'react-bootstrap'; 
-
-
 // Importe suas páginas
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
@@ -15,58 +11,171 @@ import ClientsPage from './pages/ClientsPage';
 import ServicesPage from './pages/ServicesPage';
 import UsersPage from './pages/UsersPage';
 import FinanceiroPage from './pages/FinanceiroPage';
+import RelatoriosPage from './pages/RelatoriosPage';
+
+// Importe os arquivos CSS necessários
+import './App.css';
+import './styles/style.css';
+import './styles/auth.css';
+
+// Importar ícones do Lucide React
+import { Home, Calendar, Users, Settings, UserPlus, DollarSign, BarChart2, LogOut, Menu, X, UserCircle, ChevronLeft, ChevronRight } from 'lucide-react'; // Adicionado ChevronLeft e ChevronRight
+
+
+// Componente do Sidebar
+const Sidebar = ({ user, userRole, logout, isMobileSidebarOpen, isDesktopSidebarCollapsed, toggleSidebar }) => {
+    const location = useLocation(); // Hook para pegar a localização atual
+
+    return (
+        <aside className={`sidebar ${isMobileSidebarOpen ? 'open' : ''} ${isDesktopSidebarCollapsed ? 'collapsed' : ''}`}>
+            {/* Botão para fechar o sidebar em telas pequenas (aparece no overlay) */}
+            <button className="sidebar-toggle close-sidebar-btn" onClick={toggleSidebar}>
+                <X size={24} /> {/* Ícone 'X' para fechar */}
+            </button>
+
+            <div className="sidebar-header">
+                <div className="logo-icon-placeholder">
+                    {/* Ícone SVG minimalista para a logo */}
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-car">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.6-.4-1-1-1h-1V9c0-.6-.4-1-1-1H9c-.6 0-1 .4-1 1v4H4c-.6 0-1 .4-1 1v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                    </svg>
+                </div>
+                {/* Título da App, escondido quando sidebar colapsado */}
+                <h2 className="app-title">GerenciaCAR</h2>
+            </div>
+            <nav className="sidebar-nav">
+                {/* Adicionando a classe 'active' dinamicamente */}
+                <Link to="/home" className={`sidebar-nav-item ${location.pathname === '/home' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <Home size={20} />
+                    <span>Home</span>
+                </Link>
+                <Link to="/agenda" className={`sidebar-nav-item ${location.pathname === '/agenda' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <Calendar size={20} />
+                    <span>Agenda</span>
+                </Link>
+                <Link to="/clientes" className={`sidebar-nav-item ${location.pathname === '/clientes' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <Users size={20} />
+                    <span>Clientes</span>
+                </Link>
+                <Link to="/servicos" className={`sidebar-nav-item ${location.pathname === '/servicos' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <Settings size={20} />
+                    <span>Serviços</span>
+                </Link>
+                {userRole === 'admin' && (
+                    <Link to="/usuarios" className={`sidebar-nav-item ${location.pathname === '/usuarios' ? 'active' : ''}`} onClick={toggleSidebar}>
+                        <UserPlus size={20} />
+                        <span>Usuários</span>
+                    </Link>
+                )}
+                <Link to="/financeiro" className={`sidebar-nav-item ${location.pathname === '/financeiro' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <DollarSign size={20} />
+                    <span>Financeiro</span>
+                </Link>
+                {(userRole === 'admin' || userRole === 'gerente') && (
+                    <Link to="/configuracoes" className={`sidebar-nav-item ${location.pathname === '/configuracoes' ? 'active' : ''}`} onClick={toggleSidebar}>
+                        <Settings size={20} />
+                        <span>Configurações</span>
+                    </Link>
+                )}
+                <Link to="/relatorios" className={`sidebar-nav-item ${location.pathname === '/relatorios' ? 'active' : ''}`} onClick={toggleSidebar}>
+                    <BarChart2 size={20} />
+                    <span>Relatórios</span>
+                </Link>
+            </nav>
+            <div className="sidebar-footer">
+                <div className="user-info-sidebar">
+                    <span className="user-name">{user.nome_usuario}</span>
+                    <span className="user-email">{user.email}</span>
+                </div>
+                <button className="logout-btn" onClick={logout}>
+                    <LogOut size={20} />
+                    <span>Sair</span>
+                </button>
+            </div>
+        </aside>
+    );
+};
+
+// Componente de Cabeçalho Principal
+const AppHeader = ({ user, isDesktopSidebarCollapsed, toggleSidebar }) => {
+    return (
+        <header className="app-main-header">
+            <div className="header-greeting">
+                <h1 className="header-title">Bem-vindo, {user?.nome_usuario || 'Usuário'}! 👋</h1>
+                <p className="header-subtitle">Sistema de gestão para estéticas automotivas</p>
+            </div>
+        </header>
+    );
+};
+
 
 // Componente para o Layout da aplicação
 const AppLayout = ({ children }) => {
     const { user, userRole, logout } = useContext(AuthContext);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
+    const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 992); // Estado para detectar visualização mobile
+
+    // Efeito para ajustar o estado do sidebar em redimensionamentos de tela
+    useEffect(() => {
+        const handleResize = () => {
+            const currentIsMobileView = window.innerWidth <= 992;
+            setIsMobileView(currentIsMobileView);
+
+            // Se a tela for maior que 992px, garante que o sidebar mobile esteja fechado
+            if (!currentIsMobileView) {
+                setIsMobileSidebarOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Função para alternar a visibilidade/estado do sidebar
+    const toggleSidebar = () => {
+        if (window.innerWidth <= 992) { // Comportamento para mobile/tablet (overlay)
+            setIsMobileSidebarOpen(prev => !prev);
+        } else { // Comportamento para desktop (colapsar/expandir)
+            setIsDesktopSidebarCollapsed(prev => !prev);
+        }
+    };
 
     if (!user) {
         return null;
     }
 
     return (
-        // Use Container do react-bootstrap para o layout principal
-        <Container fluid className="p-0"> {/* Use fluid para largura total e p-0 para remover padding padrão */}
-            <Navbar bg="dark" variant="dark" expand="lg" className="app-header"> {/* Navbar para o cabeçalho */}
-                <Container fluid>
-                    <Navbar.Brand as={Link} to="/home" className="d-flex align-items-center">
-                        <div className="logo-icon-placeholder me-2">
-                            🚗 {/* Placeholder visual. Futuramente, será um SVG da GerenciaCAR */}
-                        </div>
-                        <div>
-                            <h1 className="app-title mb-0">GerenciaCAR</h1>
-                        </div>
-                    </Navbar.Brand>
-                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                    <Navbar.Collapse id="basic-navbar-nav">
-                        <Nav className="me-auto main-nav"> {/* me-auto para alinhar à esquerda */}
-                            <Nav.Link as={Link} to="/home">🏠 Home</Nav.Link>
-                            <Nav.Link as={Link} to="/agenda">📅 Agenda</Nav.Link>
-                            <Nav.Link as={Link} to="/clientes">👥 Clientes</Nav.Link>
-                            <Nav.Link as={Link} to="/servicos">⚙️ Serviços</Nav.Link>
-                            {userRole === 'admin' && (
-                                <Nav.Link as={Link} to="/usuarios">🧑‍💻 Usuários</Nav.Link>
-                            )}
-                            <Nav.Link as={Link} to="/financeiro">💰 Financeiro</Nav.Link>
-                            {(userRole === 'admin' || userRole === 'gestor') && (
-                                <Nav.Link as={Link} to="/configuracoes">⚙️ Configurações</Nav.Link>
-                            )}
-                        </Nav>
-                        <Nav> {/* Nova Nav para alinhar à direita (user info e logout) */}
-                            <div className="user-info-header d-flex flex-column justify-content-center text-white me-3">
-                                <span id="logged-in-user-name">{user.nome_usuario}</span>
-                                <span id="logged-in-user-email" className="text-sm text-gray-400">{user.email}</span>
-                            </div>
-                            <Button variant="secondary" onClick={logout}>Sair</Button>
-                        </Nav>
-                    </Navbar.Collapse>
-                </Container>
-            </Navbar>
+        <div className="app-container">
+            {/* Botão de toggle para mobile - RENDERIZADO APENAS SE FOR MOBILE VIEW */}
+            {isMobileView && (
+                <button className="sidebar-toggle open-sidebar-btn" onClick={toggleSidebar}>
+                    {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            )}
 
-            <main className="main-content">
-                {children}
-            </main>
-        </Container>
+            <Sidebar
+                user={user}
+                userRole={userRole}
+                logout={logout}
+                isMobileSidebarOpen={isMobileSidebarOpen}
+                isDesktopSidebarCollapsed={isDesktopSidebarCollapsed}
+                toggleSidebar={toggleSidebar} // Passar para o botão de fechar dentro do sidebar (mobile)
+            />
+            
+            {/* Adiciona uma overlay transparente que fecha o sidebar mobile ao clicar fora */}
+            {isMobileSidebarOpen && isMobileView && (
+                <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+            )}
+
+            <div className={`main-content-wrapper ${isMobileSidebarOpen ? 'mobile-shifted' : ''} ${isDesktopSidebarCollapsed ? 'desktop-collapsed' : ''}`}>
+                {/* Passa as props de toggleSidebar e isDesktopSidebarCollapsed para o AppHeader */}
+                <AppHeader user={user} logout={logout} isDesktopSidebarCollapsed={isDesktopSidebarCollapsed} toggleSidebar={toggleSidebar} />
+                <main className="main-content-pages">
+                    {children}
+                </main>
+            </div>
+        </div>
     );
 };
 
@@ -162,6 +271,14 @@ function App() {
                 element={
                     <PrivateRoute requiredRoles={['admin', 'gestor']}>
                         <AppLayout><ConfiguracoesPage /></AppLayout> {/* Renderiza a página centralizada */}
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/relatorios" // URL para a página de configurações gerais
+                element={
+                    <PrivateRoute requiredRoles={['admin', 'gestor']}>
+                        <AppLayout><RelatoriosPage/></AppLayout> {/* Renderiza a página centralizada */}
                     </PrivateRoute>
                 }
             />

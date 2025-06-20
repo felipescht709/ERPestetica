@@ -52,7 +52,7 @@ const AuthPage = () => {
                 nome_usuario: nome_usuario.trim(),
                 nome_empresa: nome_empresa.trim(),
                 cnpj: cnpj.trim(),
-                role: 'admin',
+                role: 'admin', // A primeira conta é sempre admin
                 ativo: true,
                 telefone_contato: telefone_contato.trim() || undefined,
                 codigo_ibge: codigo_ibge.trim() || undefined,
@@ -81,6 +81,7 @@ const AuthPage = () => {
             setMessage({ type: 'success', text: `Sucesso! ${isRegisterMode ? 'Conta criada.' : 'Login realizado.'}` });
         } catch (error) {
             console.error('Erro na autenticação:', error);
+            // Use as classes de alerta existentes
             setMessage({ type: 'error', text: error.message || 'Ocorreu um erro. Tente novamente.' });
         } finally {
             setLoading(false);
@@ -120,7 +121,7 @@ const AuthPage = () => {
                     }
                 </h2>
                 {message.text && (
-                    <div className={`auth-message ${message.type}`}>
+                    <div className={`auth-message ${message.type}`}> {/* Mantido auth-message */}
                         {message.text}
                     </div>
                 )}
@@ -129,58 +130,64 @@ const AuthPage = () => {
                         <>
                             <div className="form-group">
                                 <label htmlFor="nome_usuario">Seu Nome Completo:</label>
-                                <input type="text" id="nome_usuario" value={nome_usuario} onChange={(e) => setNomeUsuario(e.target.value)} required disabled={loading} />
+                                <input type="text" id="nome_usuario" value={nome_usuario} onChange={(e) => setNomeUsuario(e.target.value)} required disabled={loading} className="input-field" />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="nome_empresa">Nome da Estética/Oficina:</label>
-                                <input type="text" id="nome_empresa" value={nome_empresa} onChange={(e) => setNomeEmpresa(e.target.value)} required disabled={loading} />
+                                <input type="text" id="nome_empresa" value={nome_empresa} onChange={(e) => setNomeEmpresa(e.target.value)} required disabled={loading} className="input-field" />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="cnpj">CNPJ:</label>
-                                <input type="text" id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} required disabled={loading} />
+                                <input type="text" id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} required disabled={loading} className="input-field" />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="telefone_contato">Telefone de Contato (opcional):</label>
-                                <input type="text" id="telefone_contato" value={telefone_contato} onChange={(e) => setTelefoneContato(e.target.value)} disabled={loading} />
+                                <input type="text" id="telefone_contato" value={telefone_contato} onChange={(e) => setTelefoneContato(e.target.value)} disabled={loading} className="input-field" />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="cep">CEP (opcional):</label>
-                                <input type="text" id="cep" value={cep} onChange={(e) => setCep(e.target.value)} disabled={loading} />
+                                <input type="text" id="cep" value={cep} onChange={(e) => setCep(e.target.value)} disabled={loading} className="input-field" />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="logradouro">Logradouro (opcional):</label>
-                                <input type="text" id="logradouro" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} disabled={loading} />
+                                <input type="text" id="logradouro" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} disabled={loading} className="input-field" />
                             </div>
-                            <div className="form-group half-width">
-                                <label htmlFor="numero">Número (opcional):</label>
-                                <input type="text" id="numero" value={numero} onChange={(e) => setNumero(e.target.value)} disabled={loading} />
+                            <div className="form-row"> {/* Usando form-row para agrupar half-width */}
+                                <div className="form-group half-width">
+                                    <label htmlFor="numero">Número (opcional):</label>
+                                    <input type="text" id="numero" value={numero} onChange={(e) => setNumero(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="complemento">Complemento (opcional):</label>
+                                    <input type="text" id="complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
                             </div>
-                            <div className="form-group half-width">
-                                <label htmlFor="complemento">Complemento (opcional):</label>
-                                <input type="text" id="complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} disabled={loading} />
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="bairro">Bairro (opcional):</label>
+                                    <input type="text" id="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="cidade">Cidade (opcional):</label>
+                                    <input type="text" id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
                             </div>
-                             <div className="form-group half-width">
-                                <label htmlFor="bairro">Bairro (opcional):</label>
-                                <input type="text" id="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} disabled={loading} />
-                            </div>
-                            <div className="form-group half-width">
-                                <label htmlFor="cidade">Cidade (opcional):</label>
-                                <input type="text" id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} disabled={loading} />
-                            </div>
-                            <div className="form-group half-width">
-                                <label htmlFor="uf">UF (opcional):</label>
-                                <input type="text" id="uf" maxLength="2" value={uf} onChange={(e) => setUf(e.target.value)} disabled={loading} />
-                            </div>
-                             <div className="form-group half-width">
-                                <label htmlFor="codigo_ibge">Código IBGE (opcional):</label>
-                                <input type="text" id="codigo_ibge" value={codigo_ibge} onChange={(e) => setCodigoIbge(e.target.value)} disabled={loading} />
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="uf">UF (opcional):</label>
+                                    <input type="text" id="uf" maxLength="2" value={uf} onChange={(e) => setUf(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="codigo_ibge">Código IBGE (opcional):</label>
+                                    <input type="text" id="codigo_ibge" value={codigo_ibge} onChange={(e) => setCodigoIbge(e.target.value)} disabled={loading} className="input-field" />
+                                </div>
                             </div>
 
                             {/* NOVO: Seleção de Role */}
                             {loggedInUserRole === 'admin' && ( // Apenas admin pode selecionar a role
                                 <div className="form-group">
                                     <label htmlFor="role-select">Atribuir Role:</label>
-                                    <select id="role-select" value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} disabled={loading}>
+                                    <select id="role-select" value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} disabled={loading} className="input-field">
                                         <option value="admin">Administrador</option>
                                         <option value="gerente">Gerente</option>
                                         <option value="atendente">Atendente</option>
@@ -193,11 +200,11 @@ const AuthPage = () => {
                     )}
                     <div className="form-group">
                         <label htmlFor="email">Email:</label>
-                        <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+                        <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} className="input-field" />
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Senha:</label>
-                        <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+                        <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} className="input-field" />
                     </div>
                     <button type="submit" className="button-primary" disabled={loading}>
                         {loading ? 'Carregando...' : (isRegisterMode ? 'Registrar' : 'Entrar')}

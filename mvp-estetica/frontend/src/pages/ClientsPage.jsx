@@ -1,8 +1,9 @@
 // frontend/src/pages/ClientsPage.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api'; // Supondo que api.jsx está em ../utils/api
-import '../styles/style.css'; // Estilos gerais
-import '../styles/clients.css'; // Estilos específicos para a página de clientes (criaremos este)
+// Importar ícones do Lucide React
+import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+
 
 const ClientsPage = () => {
     const [clients, setClients] = useState([]);
@@ -28,18 +29,20 @@ const ClientsPage = () => {
     });
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [searchTerm, setSearchTerm] = useState(''); // Novo estado para o termo de busca
 
     useEffect(() => {
         fetchClients();
     }, []);
 
     const fetchClients = async () => {
-    try {
-        const clients = await api('/clientes', { method: 'GET' });
-        setClients(clients);
-    } catch (error) {
-        console.error('Erro ao buscar clientes:', error);
-    }
+        try {
+            const clients = await api('/clientes', { method: 'GET' });
+            setClients(clients);
+        } catch (error) {
+            console.error('Erro ao buscar clientes:', error);
+            setError('Erro ao carregar clientes. Tente novamente.');
+        }
     };
 
     const handleInputChange = (e) => {
@@ -205,7 +208,7 @@ const ClientsPage = () => {
         const formattedClient = { ...client };
         if (formattedClient.data_nascimento) {
             const date = new Date(formattedClient.data_nascimento);
-            formattedClient.data_nascimento = date.toISOString().split('T')[0]; // YYYY-MM-DD
+            formattedClient.data_nascimento = date.toISOString().split('T')[0]; // Adjust for YYYY-MM-DD
         }
         // Re-apply masks if necessary, or just keep raw as input fields will format.
         // For simplicity, we'll let the input change handlers re-format on interaction.
@@ -239,20 +242,40 @@ const ClientsPage = () => {
         setError('');
     };
 
+    // Filtra clientes com base no termo de busca
+    const filteredClients = clients.filter(client =>
+        client.nome_cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.cpf.includes(searchTerm) ||
+        client.telefone.includes(searchTerm) ||
+        client.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+
     return (
-        <div className="clients-page-container">
-            <h2 className="page-title">Gerenciamento de Clientes</h2>
+        <div className="page-container"> {/* Usando o container geral da página */}
+            <div className="page-section-header">
+                <h2>Gerenciamento de Clientes</h2>
+                <button className="btn-primary-dark" onClick={handleAddClick}>
+                    <Plus size={20} />
+                    Novo Cliente
+                </button>
+            </div>
 
             {message && <div className="alert success">{message}</div>}
             {error && <div className="alert error">{error}</div>}
 
-            <button className="btn-add-new" onClick={handleAddClick}>
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-            </svg>
-            Adicionar Novo Cliente
-            </button>
-            <div className="table-responsive">
+            <div className="search-input-container">
+                <Search size={20} className="search-icon" />
+                <input
+                    type="text"
+                    placeholder="Buscar clientes..."
+                    className="input-field"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+
+            <div className="table-responsive section-content"> {/* Adicione section-content para o estilo de card */}
                 <table className="clients-table">
                     <thead>
                         <tr>
@@ -266,34 +289,32 @@ const ClientsPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {clients.length > 0 ? (
-                            clients.map((client) => (
+                        {filteredClients.length > 0 ? (
+                            filteredClients.map((client) => (
                                 <tr key={client.cod_cliente}>
-                                    <td>{client.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')}</td>
-                                    <td>{client.nome_cliente}</td>
-                                    <td>{client.telefone.replace(/^(\d\d)(\d{5})(\d{4})$/, '($1) $2-$3')}</td>
-                                    <td>{client.email || 'N/A'}</td>
-                                    <td>{client.ultimo_servico ? new Date(client.ultimo_servico).toLocaleDateString() : 'N/A'}</td>
-                                    <td>R$ {Number(client.total_gasto || 0).toFixed(2).replace('.', ',')}</td>
+                                    {/* Removido o espaço em branco entre as tags <td> */}
+                                    <td>{client.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')}</td><td>{client.nome_cliente}</td><td>{client.telefone.replace(/^(\d\d)(\d{5})(\d{4})$/, '($1) $2-$3')}</td><td>{client.email || 'N/A'}</td><td>{client.ultimo_servico ? new Date(client.ultimo_servico).toLocaleDateString() : 'N/A'}</td><td>R$ {Number(client.total_gasto || 0).toFixed(2).replace('.', ',')}</td>
                                     <td className="actions">
                                     <button
                                         onClick={() => handleEditClick(client)}
-                                        className="btn-action btn-edit"
+                                        className="btn-action" // Removidas as estilos inline
                                         title="Editar"
-                                        style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: '4px', marginRight: '4px', padding: '6px' }}
                                     >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                                            strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/>
-                                        </svg>
+                                        <Edit size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClick(client.cod_cliente)}
+                                        className="btn-action btn-delete" // Adicionado btn-delete para estilo específico
+                                        title="Excluir"
+                                    >
+                                        <Trash2 size={18} />
                                     </button>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7">Nenhum cliente cadastrado.</td>
+                                <td colSpan="7" className="empty-state-table">Nenhum cliente encontrado.</td> {/* Nova classe para TD de empty state */}
                             </tr>
                         )}
                     </tbody>
@@ -301,81 +322,93 @@ const ClientsPage = () => {
             </div>
 
             {showModal && (
-                <div className="modal-overlay">
+                <div className="modal-backdrop"> {/* Renomeado para modal-backdrop conforme seu CSS */}
                     <div className="modal-content">
                         <h3>{isEditing ? 'Editar Cliente' : 'Adicionar Novo Cliente'}</h3>
                         {error && <div className="alert error">{error}</div>}
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label htmlFor="cpf">CPF:</label>
-                                <input
-                                    type="text"
-                                    id="cpf"
-                                    name="cpf"
-                                    value={currentClient.cpf}
-                                    onChange={handleCpfChange}
-                                    maxLength="14"
-                                    placeholder="XXX.XXX.XXX-XX"
-                                    required
-                                />
+                            <div className="form-row"> {/* Agrupar campos lado a lado */}
+                                <div className="form-group half-width">
+                                    <label htmlFor="cpf">CPF:</label>
+                                    <input
+                                        type="text"
+                                        id="cpf"
+                                        name="cpf"
+                                        value={currentClient.cpf}
+                                        onChange={handleCpfChange}
+                                        maxLength="14"
+                                        placeholder="XXX.XXX.XXX-XX"
+                                        required
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="nome_cliente">Nome do Cliente:</label>
+                                    <input
+                                        type="text"
+                                        id="nome_cliente"
+                                        name="nome_cliente"
+                                        value={currentClient.nome_cliente}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="input-field"
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="nome_cliente">Nome do Cliente:</label>
-                                <input
-                                    type="text"
-                                    id="nome_cliente"
-                                    name="nome_cliente"
-                                    value={currentClient.nome_cliente}
-                                    onChange={handleInputChange}
-                                    required
-                                />
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="data_nascimento">Data de Nascimento:</label>
+                                    <input
+                                        type="date"
+                                        id="data_nascimento"
+                                        name="data_nascimento"
+                                        value={currentClient.data_nascimento}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="email">Email:</label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        value={currentClient.email}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="data_nascimento">Data de Nascimento:</label>
-                                <input
-                                    type="date"
-                                    id="data_nascimento"
-                                    name="data_nascimento"
-                                    value={currentClient.data_nascimento}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="email">Email:</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={currentClient.email}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="telefone">Telefone:</label>
-                                <input
-                                    type="text"
-                                    id="telefone"
-                                    name="telefone"
-                                    value={currentClient.telefone}
-                                    onChange={handlePhoneChange}
-                                    maxLength="15"
-                                    placeholder="(XX) XXXXX-XXXX"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="genero">Gênero:</label>
-                                <select
-                                    id="genero"
-                                    name="genero"
-                                    value={currentClient.genero}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="Masculino">Masculino</option>
-                                    <option value="Feminino">Feminino</option>
-                                    <option value="Outro">Outro</option>
-                                </select>
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="telefone">Telefone:</label>
+                                    <input
+                                        type="text"
+                                        id="telefone"
+                                        name="telefone"
+                                        value={currentClient.telefone}
+                                        onChange={handlePhoneChange}
+                                        maxLength="15"
+                                        placeholder="(XX) XXXXX-XXXX"
+                                        required
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="genero">Gênero:</label>
+                                    <select
+                                        id="genero"
+                                        name="genero"
+                                        value={currentClient.genero}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    >
+                                        <option value="">Selecione</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Feminino">Feminino</option>
+                                        <option value="Outro">Outro</option>
+                                    </select>
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label htmlFor="observacoes_gerais">Observações Gerais:</label>
@@ -384,9 +417,9 @@ const ClientsPage = () => {
                                     name="observacoes_gerais"
                                     value={currentClient.observacoes_gerais}
                                     onChange={handleInputChange}
+                                    className="input-field"
                                 ></textarea>
                             </div>
-                             {/* Não incluir 'indicado_por' no formulário de cliente inicial para evitar complexidade circular ou a necessidade de buscar todos os clientes para preenchimento. Pode ser uma funcionalidade para uma próxima iteração. */}
                             <div className="form-group">
                                 <label htmlFor="cep">CEP:</label>
                                 <input
@@ -397,6 +430,7 @@ const ClientsPage = () => {
                                     onChange={handleCepChange}
                                     maxLength="9"
                                     placeholder="XXXXX-XXX"
+                                    className="input-field"
                                 />
                             </div>
                             <div className="form-group">
@@ -407,47 +441,56 @@ const ClientsPage = () => {
                                     name="logradouro"
                                     value={currentClient.logradouro}
                                     onChange={handleInputChange}
+                                    className="input-field"
                                 />
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="numero">Número:</label>
-                                <input
-                                    type="text"
-                                    id="numero"
-                                    name="numero"
-                                    value={currentClient.numero}
-                                    onChange={handleInputChange}
-                                />
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="numero">Número:</label>
+                                    <input
+                                        type="text"
+                                        id="numero"
+                                        name="numero"
+                                        value={currentClient.numero}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="complemento">Complemento:</label>
+                                    <input
+                                        type="text"
+                                        id="complemento"
+                                        name="complemento"
+                                        value={currentClient.complemento}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="complemento">Complemento:</label>
-                                <input
-                                    type="text"
-                                    id="complemento"
-                                    name="complemento"
-                                    value={currentClient.complemento}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="bairro">Bairro:</label>
-                                <input
-                                    type="text"
-                                    id="bairro"
-                                    name="bairro"
-                                    value={currentClient.bairro}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="cidade">Cidade:</label>
-                                <input
-                                    type="text"
-                                    id="cidade"
-                                    name="cidade"
-                                    value={currentClient.cidade}
-                                    onChange={handleInputChange}
-                                />
+                            <div className="form-row">
+                                <div className="form-group half-width">
+                                    <label htmlFor="bairro">Bairro:</label>
+                                    <input
+                                        type="text"
+                                        id="bairro"
+                                        name="bairro"
+                                        value={currentClient.bairro}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div className="form-group half-width">
+                                    <label htmlFor="cidade">Cidade:</label>
+                                    <input
+                                        type="text"
+                                        id="cidade"
+                                        name="cidade"
+                                        value={currentClient.cidade}
+                                        onChange={handleInputChange}
+                                        className="input-field"
+                                    />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label htmlFor="uf">UF:</label>
@@ -458,13 +501,14 @@ const ClientsPage = () => {
                                     maxLength="2"
                                     value={currentClient.uf}
                                     onChange={handleInputChange}
+                                    className="input-field"
                                 />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn-primary">
+                                <button type="submit" className="button-primary">
                                     {isEditing ? 'Salvar Alterações' : 'Adicionar Cliente'}
                                 </button>
-                                <button type="button" onClick={closeModal} className="btn-secondary">
+                                <button type="button" onClick={closeModal} className="button-secondary">
                                     Cancelar
                                 </button>
                             </div>

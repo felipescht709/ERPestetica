@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import api from '../utils/api'; // Sua função para chamadas de API autenticadas
 import { AuthContext } from '../context/AuthContext';
-import {
-    Container, Row, Col, Button, Modal, Form,
-    Table, Spinner, Alert, Card
-} from 'react-bootstrap';
+// Importar ícones do Lucide React
+import { Plus, Search, Edit, Trash2, Settings } from 'lucide-react';
+// Importar componentes específicos do react-bootstrap que ainda são utilizados
+import { Spinner, Alert, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+
 
 const ServicesPage = () => {
     const [services, setServices] = useState([]);
@@ -30,6 +31,7 @@ const ServicesPage = () => {
         requer_aprovacao: false, // Boolean
     });
     const [message, setMessage] = useState(null); // Para mensagens de sucesso/erro do formulário no modal ou página
+    const [searchTerm, setSearchTerm] = useState(''); // Novo estado para busca
 
     const { userRole } = useContext(AuthContext);
     const canManageServices = ['admin', 'gerente'].includes(userRole);
@@ -113,10 +115,6 @@ const ServicesPage = () => {
         setError(null); // Limpa erros ao fechar o modal
     };
 
-   // frontend/src/pages/ServicesPage.jsx (apenas a função handleSubmit)
-
-// ... (código existente da ServicesPage) ...
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -154,11 +152,9 @@ const ServicesPage = () => {
 
 
             if (isEditing) {
-                // REMOVA O JSON.stringify AQUI
                 await api(`/servicos/${serviceToSave.cod_servico}`, { method: 'PUT', body: JSON.stringify( serviceToSave) });
                 setMessage({ type: 'success', text: 'Serviço atualizado com sucesso!' });
             } else {
-                // REMOVA O JSON.stringify AQUI
                 await api('/servicos', { method: 'POST', body: JSON.stringify( serviceToSave) });
                 setMessage({ type: 'success', text: 'Serviço adicionado com sucesso!' });
             }
@@ -173,7 +169,7 @@ const ServicesPage = () => {
     };
 
     const handleDelete = async (cod_servico) => {
-        if (window.confirm('Tem certeza que deseja deletar este serviço?')) {
+        if (window.confirm('Tem certeza que deseja deletar este serviço?')) { // Usar modal customizado
             setLoading(true);
             setMessage(null);
             setError(null);
@@ -190,231 +186,238 @@ const ServicesPage = () => {
         }
     };
 
+    // Filtra serviços com base no termo de busca
+    const filteredServices = services.filter(service =>
+        service.nome_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     // Renderização de carregamento, erro ou acesso negado
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center min-vh-100">
+            <div className="loading-screen">
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Carregando serviços...</span>
                 </Spinner>
-            </Container>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Container className="my-4">
-                <Alert variant="danger">
-                    <Alert.Heading>Erro de Acesso</Alert.Heading>
-                    <p>{error}</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4">
+                <h3>Erro de Acesso</h3>
+                <p>{error}</p>
+            </div>
         );
     }
 
     if (!canManageServices) {
         return (
-            <Container className="my-4">
-                <Alert variant="warning">
-                    <Alert.Heading>Acesso Negado</Alert.Heading>
-                    <p>Você não tem permissão para visualizar e gerenciar serviços.</p>
-                </Alert>
-            </Container>
+            <div className="alert error my-4">
+                <h3>Acesso Negado</h3>
+                <p>Você não tem permissão para visualizar e gerenciar serviços.</p>
+            </div>
         );
     }
 
     return (
-        <Container fluid className="my-4">
-            <Row className="mb-3 align-items-center">
-                <Col>
-                    <h1>⚙️ Gerenciar Serviços</h1>
-                </Col>
-                <Col xs="auto">
-                    <Button variant="primary" onClick={openCreateModal}>
-                        + Adicionar Novo Serviço
-                    </Button>
-                </Col>
-            </Row>
+        <div className="page-container">
+            <div className="page-section-header">
+                <h2><Settings size={28} style={{verticalAlign: 'middle', marginRight: '10px'}} /> Gerenciar Serviços</h2>
+                <button className="btn-primary-dark" onClick={openCreateModal}>
+                    <Plus size={20} />
+                    Adicionar Novo Serviço
+                </button>
+            </div>
 
             {message && (
-                <Alert variant={message.type === 'success' ? 'success' : 'danger'}>
+                <div className={`alert ${message.type}`}>
                     {message.text}
-                </Alert>
+                </div>
             )}
 
-            <Row>
-                <Col xs={12}>
-                    <Card>
-                        <Card.Header><h3 className="card-title mb-0">Lista de Serviços</h3></Card.Header>
-                        <Card.Body>
-                            <div className="table-responsive"> {/* Para rolagem horizontal em telas pequenas */}
-                                <Table striped bordered hover className="shadow-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Nome</th>
-                                            <th>Preço</th>
-                                            <th>Duração (min)</th>
-                                            <th>Categoria</th>
-                                            <th>Ativo</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {services.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="7" className="text-center text-muted py-3">Nenhum serviço cadastrado.</td>
-                                            </tr>
-                                        ) : (
-                                            services.map((service) => (
-                                                <tr key={service.cod_servico}>
-                                                    <td>{service.cod_servico}</td>
-                                                    <td>{service.nome_servico}</td>
-                                                    <td>R$ {service.preco ? parseFloat(service.preco).toFixed(2).replace('.', ',') : '0,00'}</td>
-                                                    <td>{service.duracao_minutos || 'N/A'}</td>
-                                                    <td>{service.categoria}</td>
-                                                    <td>
-                                                        <span className={`badge ${service.ativo ? 'bg-success' : 'bg-danger'}`}>
-                                                            {service.ativo ? 'Sim' : 'Não'}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <Button variant="info" size="sm" className="me-2" onClick={() => openEditModal(service)}>
-                                                            Editar
-                                                        </Button>
-                                                        <Button variant="danger" size="sm" onClick={() => handleDelete(service.cod_servico)}>
-                                                            Excluir
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </div>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+            <div className="search-input-container">
+                <Search size={20} className="search-icon" />
+                <input
+                    type="text"
+                    placeholder="Buscar serviços..."
+                    className="input-field"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+
+            <div className="section-content"> {/* Adicionado section-content para o estilo de card */}
+                <h3 className="card-title mb-3">Lista de Serviços</h3>
+                <div className="table-responsive"> {/* Para rolagem horizontal em telas pequenas */}
+                    <Table striped bordered hover className="clients-table"> {/* Reutilizado clients-table para estilização */}
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Duração (min)</th>
+                                <th>Categoria</th>
+                                <th>Ativo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredServices.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="empty-state-table">Nenhum serviço encontrado.</td>
+                                </tr>
+                            ) : (
+                                filteredServices.map((service) => (
+                                    <tr key={service.cod_servico}>
+                                        <td>{service.cod_servico}</td>
+                                        <td>{service.nome_servico}</td> {/* Adicionado nome_servico aqui */}
+                                        <td>R$ {service.preco ? parseFloat(service.preco).toFixed(2).replace('.', ',') : '0,00'}</td>
+                                        <td>{service.duracao_minutos || 'N/A'}</td>
+                                        <td>{service.categoria}</td>
+                                        <td>
+                                            <span className={`status-badge ${service.ativo ? 'status-confirmado' : 'status-inativo'}`}>
+                                                {service.ativo ? 'Sim' : 'Não'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button className="btn-action" onClick={() => openEditModal(service)} title="Editar">
+                                                <Edit size={18} />
+                                            </button>
+                                            <button className="btn-action btn-delete" onClick={() => handleDelete(service.cod_servico)} title="Excluir">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+            </div>
 
             {/* Modal de Adicionar/Editar Serviço */}
-            <Modal show={showModal} onHide={closeModal} centered size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{isEditing ? 'Editar Serviço' : 'Adicionar Novo Serviço'}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {message && ( // Exibe mensagens dentro do modal também
-                        <Alert variant={message.type === 'success' ? 'success' : 'danger'}>
-                            {message.text}
-                        </Alert>
-                    )}
-                    <Form onSubmit={handleSubmit}>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="nome_servico">
-                                    <Form.Label>Nome do Serviço:</Form.Label>
-                                    <Form.Control type="text" name="nome_servico" value={currentService.nome_servico} onChange={handleInputChange} required />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="categoria">
-                                    <Form.Label>Categoria:</Form.Label>
-                                    <Form.Control type="text" name="categoria" value={currentService.categoria} onChange={handleInputChange} required />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={4}>
-                                <Form.Group className="mb-3" controlId="duracao_minutos">
-                                    <Form.Label>Duração (minutos):</Form.Label>
-                                    <Form.Control type="number" name="duracao_minutos" value={currentService.duracao_minutos} onChange={handleInputChange} required min="1" />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3" controlId="preco">
-                                    <Form.Label>Preço (R$):</Form.Label>
-                                    <Form.Control type="number" step="0.01" name="preco" value={currentService.preco} onChange={handleInputChange} required min="0" />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3" controlId="garantia_dias">
-                                    <Form.Label>Garantia (dias):</Form.Label>
-                                    <Form.Control type="number" name="garantia_dias" value={currentService.garantia_dias} onChange={handleInputChange} min="0" />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="custo_material">
-                                    <Form.Label>Custo Material (R$):</Form.Label>
-                                    <Form.Control type="number" step="0.01" name="custo_material" value={currentService.custo_material} onChange={handleInputChange} min="0" />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="custo_mao_de_obra">
-                                    <Form.Label>Custo Mão de Obra (R$):</Form.Label>
-                                    <Form.Control type="number" step="0.01" name="custo_mao_de_obra" value={currentService.custo_mao_de_obra} onChange={handleInputChange} min="0" />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Form.Group className="mb-3" controlId="descricao_servico">
-                            <Form.Label>Descrição do Serviço:</Form.Label>
-                            <Form.Control as="textarea" rows={2} name="descricao_servico" value={currentService.descricao_servico} onChange={handleInputChange} />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="observacoes_internas">
-                            <Form.Label>Observações Internas:</Form.Label>
-                            <Form.Control as="textarea" rows={2} name="observacoes_internas" value={currentService.observacoes_internas} onChange={handleInputChange} />
-                        </Form.Group>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="imagem_url">
-                                    <Form.Label>URL da Imagem:</Form.Label>
-                                    <Form.Control type="text" name="imagem_url" value={currentService.imagem_url} onChange={handleInputChange} />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="ordem_exibicao">
-                                    <Form.Label>Ordem de Exibição:</Form.Label>
-                                    <Form.Control type="number" name="ordem_exibicao" value={currentService.ordem_exibicao} onChange={handleInputChange} min="0" />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="ativo">
-                                    <Form.Check
-                                        type="checkbox"
-                                        label="Serviço Ativo"
-                                        name="ativo"
-                                        checked={currentService.ativo}
-                                        onChange={handleInputChange}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3" controlId="requer_aprovacao">
-                                    <Form.Check
-                                        type="checkbox"
-                                        label="Requer Aprovação do Gestor"
-                                        name="requer_aprovacao"
-                                        checked={currentService.requer_aprovacao}
-                                        onChange={handleInputChange}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={closeModal}>
-                                Cancelar
-                            </Button>
-                            <Button variant="primary" type="submit"> {/* Removido disabled={loading} pois o loading está no modal e pode desabilitar demais */}
-                                {isEditing ? 'Salvar Alterações' : 'Adicionar Serviço'}
-                            </Button>
-                        </Modal.Footer>
-                    </Form>
-                </Modal.Body>
-            </Modal>
-        </Container>
+            {showModal && (
+                <div className="modal-backdrop">
+                    <div className="modal-content">
+                        <h3>{isEditing ? 'Editar Serviço' : 'Adicionar Novo Serviço'}</h3>
+                        {message && ( // Exibe mensagens dentro do modal também
+                            <div className={`alert ${message.type}`}>
+                                {message.text}
+                            </div>
+                        )}
+                        <form onSubmit={handleSubmit}>
+                            {/* Removi a tag <Form.Group> extra pois o Form.Control já o cria implictamente. Isso evita warnings. */}
+                            <Row>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="nome_servico">Nome do Serviço:</label>
+                                        <input type="text" name="nome_servico" id="nome_servico" value={currentService.nome_servico} onChange={handleInputChange} required className="input-field" />
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="categoria">Categoria:</label>
+                                        <input type="text" name="categoria" id="categoria" value={currentService.categoria} onChange={handleInputChange} required className="input-field" />
+                                    </div>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col md={4}>
+                                    <div className="form-group">
+                                        <label htmlFor="duracao_minutos">Duração (minutos):</label>
+                                        <input type="number" name="duracao_minutos" id="duracao_minutos" value={currentService.duracao_minutos} onChange={handleInputChange} required min="1" className="input-field" />
+                                    </div>
+                                </Col>
+                                <Col md={4}>
+                                    <div className="form-group">
+                                        <label htmlFor="preco">Preço (R$):</label>
+                                        <input type="number" step="0.01" name="preco" id="preco" value={currentService.preco} onChange={handleInputChange} required min="0" className="input-field" />
+                                    </div>
+                                </Col>
+                                <Col md={4}>
+                                    <div className="form-group">
+                                        <label htmlFor="garantia_dias">Garantia (dias):</label>
+                                        <input type="number" name="garantia_dias" id="garantia_dias" value={currentService.garantia_dias} onChange={handleInputChange} min="0" className="input-field" />
+                                    </div>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="custo_material">Custo Material (R$):</label>
+                                        <input type="number" step="0.01" name="custo_material" id="custo_material" value={currentService.custo_material} onChange={handleInputChange} min="0" className="input-field" />
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="custo_mao_de_obra">Custo Mão de Obra (R$):</label>
+                                        <input type="number" step="0.01" name="custo_mao_de_obra" id="custo_mao_de_obra" value={currentService.custo_mao_de_obra} onChange={handleInputChange} min="0" className="input-field" />
+                                    </div>
+                                </Col>
+                            </Row>
+                            <div className="form-group">
+                                <label htmlFor="descricao_servico">Descrição do Serviço:</label>
+                                <textarea rows={2} name="descricao_servico" id="descricao_servico" value={currentService.descricao_servico} onChange={handleInputChange} className="input-field"></textarea>
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="observacoes_internas">Observações Internas:</label>
+                                <textarea rows={2} name="observacoes_internas" id="observacoes_internas" value={currentService.observacoes_internas} onChange={handleInputChange} className="input-field"></textarea>
+                            </div>
+                            <Row>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="imagem_url">URL da Imagem:</label>
+                                        <input type="text" name="imagem_url" id="imagem_url" value={currentService.imagem_url} onChange={handleInputChange} className="input-field" />
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <label htmlFor="ordem_exibicao">Ordem de Exibição:</label>
+                                        <input type="number" name="ordem_exibicao" id="ordem_exibicao" value={currentService.ordem_exibicao} onChange={handleInputChange} min="0" className="input-field" />
+                                    </div>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <input
+                                            type="checkbox"
+                                            name="ativo"
+                                            id="ativo"
+                                            checked={currentService.ativo}
+                                            onChange={handleInputChange}
+                                        />
+                                        <label htmlFor="ativo" style={{ display: 'inline-block', marginLeft: '10px' }}>Serviço Ativo</label>
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="form-group">
+                                        <input
+                                            type="checkbox"
+                                            name="requer_aprovacao"
+                                            id="requer_aprovacao"
+                                            checked={currentService.requer_aprovacao}
+                                            onChange={handleInputChange}
+                                        />
+                                        <label htmlFor="requer_aprovacao" style={{ display: 'inline-block', marginLeft: '10px' }}>Requer Aprovação do Gestor</label>
+                                    </div>
+                                </Col>
+                            </Row>
+                            <div className="modal-actions">
+                                <button type="button" className="button-secondary" onClick={closeModal}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="button-primary">
+                                    {isEditing ? 'Salvar Alterações' : 'Adicionar Serviço'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

@@ -24,16 +24,20 @@
     --purple-100: #f3e8ff;
     --purple-600: #9333ea;
 
-    /* Cores específicas para o header e elementos de UI baseados no exemplo da Amplimed */
-    --header-bg: var(--primary-dark-color);
-    --header-text-light: white;
-    --header-link-hover: var(--primary-color);
-    --header-link-color: var(--secondary-color);
-    --accent-color: var(--primary-color); /* Para o logo */
+    /* Novas variáveis específicas para o sidebar e header principal */
+    --sidebar-width: 250px;
+    --sidebar-icon-width: 80px; /* Nova variável para a largura colapsada do sidebar */
+    --sidebar-bg: #1f2937;
+    --sidebar-text-color: #e0e7ff;
+    --sidebar-hover-bg: #374151;
+    --sidebar-active-bg: var(--primary-color);
+    --sidebar-icon-color: #9ca3af;
+    --sidebar-border-color: #4b5563;
+    --header-height: 60px; /* Mantido para referência, mas o novo header tem altura flexível */
+    --accent-color: var(--primary-color); /* Para o logo no sidebar */
 }
 
 /* BASE STYLES - CRÍTICO PARA POSICIONAMENTO FIXO */
-/* Garante que os elementos raiz ocupem 100% da altura da viewport */
 html, body, #root {
     height: 100%;
     margin: 0;
@@ -47,9 +51,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     line-height: 1.6;
-    display: flex; /* Transforma o body em um container flexível */
-    flex-direction: column; /* Organiza os filhos (header, main-content) em coluna */
-    min-height: 100vh; /* Garante que o body ocupa a altura total da viewport */
+    min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -67,146 +69,7 @@ a:hover {
     text-decoration: underline;
 }
 
-/* --- LAYOUT GLOBAL: CONTAINER COM HEADER E MAIN-CONTENT --- */
-.container { /* Este div é o pai do header e main-content no App.jsx */
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-height: 100vh;
-    box-sizing: border-box;
-}
-
-.main-content {
-    flex-grow: 1;
-    padding: 32px;
-    overflow-y: auto; /* Permite rolagem vertical se o conteúdo for maior que a tela */
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* --- ESTILOS DO HEADER --- */
-.app-header {
-    background-color: var(--header-bg);
-    color: var(--header-text-light);
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-    width: 100%;
-    box-sizing: border-box;
-    position: sticky; /* ou 'fixed' se quiser que ele SEMPRE esteja no topo e não role */
-    top: 0;
-    z-index: 999;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 30px;
-}
-
-.logo-section {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.logo-icon-placeholder {
-    width: 45px;
-    height: 45px;
-    background-color: var(--accent-color);
-    border-radius: 8px; /* Mantendo o estilo de quadrado arredondado do Amplimed */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-right: 10px;
-    color: white;
-    flex-shrink: 0;
-}
-
-.app-title {
-    font-size: 1.4em;
-    font-weight: bold;
-    color: var(--header-text-light);
-    margin: 0;
-}
-
-.app-subtitle {
-    font-size: 0.75em;
-    color: var(--primary-light);
-    margin: 0;
-}
-
-.main-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    gap: 20px;
-}
-
-.main-nav .nav-item a {
-    display: block;
-    padding: 10px 15px;
-    color: var(--header-link-color);
-    font-size: 1em;
-    border-radius: 6px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    white-space: nowrap;
-}
-
-.main-nav .nav-item a:hover,
-.main-nav .nav-item a.active {
-    background-color: var(--header-link-hover);
-    color: white;
-    text-decoration: none;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.user-info-header {
-    text-align: right;
-    color: var(--primary-light);
-    display: flex;
-    flex-direction: column;
-}
-
-.user-info-header span {
-    display: block;
-    font-size: 0.9em;
-}
-
-.user-info-header .text-sm {
-    font-size: 0.8em;
-    color: #a7a7d4;
-}
-
-.button-secondary {
-    background-color: transparent;
-    color: var(--secondary-color);
-    padding: 8px 12px;
-    border: 1px solid var(--secondary-color);
-    border-radius: 6px;
-    font-size: 0.9em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.button-secondary:hover {
-    background-color: var(--secondary-color);
-    color: var(--primary-dark-color);
-    border-color: var(--secondary-color);
-}
-
-
-/* --- CLASSES E COMPONENTES GERAIS --- */
+/* --- CLASSES E COMPONENTES GERAIS (mantidos) --- */
 
 /* Títulos e subtítulos de página */
 .page-title {
@@ -290,8 +153,6 @@ a:hover {
 .bg-blue-100 { background-color: var(--blue-status); }
 .text-purple-600 { color: var(--purple-600); }
 .bg-purple-100 { background-color: var(--purple-100); }
-.text-orange-600 { color: var(--orange-text); }
-.bg-orange-100 { background-color: var(--orange-status); }
 .text-yellow-600 { color: var(--yellow-text); }
 .bg-yellow-100 { background-color: var(--yellow-status); }
 .text-gray-600 { color: #6b7280; }
@@ -545,16 +406,16 @@ a:hover {
 
 /* Estilos para o modal */
 .modal-backdrop {
-    position: fixed; /* ISSO É O MAIS IMPORTANTE: Faz o elemento ficar fixo na viewport */
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100vw; /* Use 100vw e 100vh para garantir que ele cubra a viewport inteira */
+    width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
-    display: flex; /* Para centralizar o conteúdo */
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Garante que fique acima de tudo */
+    z-index: 1000;
 }
 
 .modal-content {
@@ -564,9 +425,9 @@ a:hover {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     width: 90%;
     max-width: 600px;
-    max-height: 90vh; /* Limita a altura e adiciona scroll */
+    max-height: 90vh;
     overflow-y: auto;
-    position: relative; /* Importante para elementos internos posicionados */
+    position: relative;
 }
 
 .modal-content h3 {
@@ -583,60 +444,122 @@ a:hover {
     margin-top: 25px;
 }
 
-/* MEDIA QUERIES PARA RESPONSIVIDADE (do header e outros elementos) */
+/* --- NOVOS ESTILOS PARA LAYOUTS DE PÁGINAS INDIVIDUAIS --- */
+
+/* Cabeçalho de Seção da Página (Título + Ações) */
+.page-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px; /* Adiciona um padding para a linha de baixo */
+    border-bottom: 1px solid var(--border-color); /* Linha divisória */
+}
+
+.page-section-header h2 {
+    font-size: 2em; /* Tamanho do título da seção, ex: "Dashboard", "Clientes" */
+    font-weight: bold;
+    color: var(--text-color);
+    margin: 0;
+}
+
+/* Estilo para o botão primário escuro (ex: "Novo Cliente", "Novo Serviço") */
+.btn-primary-dark {
+    background-color: var(--text-color); /* Cor de fundo escura, como nas imagens */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* Espaçamento entre ícone e texto */
+}
+
+.btn-primary-dark:hover {
+    background-color: #374151; /* Um pouco mais claro no hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo para o campo de busca com ícone */
+.search-input-container {
+    position: relative;
+    margin-bottom: 20px; /* Espaçamento abaixo do campo de busca */
+}
+
+.search-input-container .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--subtle-text-color);
+    pointer-events: none; /* Garante que o ícone não interfira com o clique no input */
+}
+
+.search-input-container .input-field {
+    padding-left: 45px; /* Aumenta o padding para o texto não ficar por baixo do ícone */
+}
+
+/* Alinhamento para elementos de filtro (datas no Financeiro) */
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.filter-controls label {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--subtle-text-color);
+}
+
+.filter-controls .input-field {
+    width: auto; /* Permite que o input de data tenha largura flexível */
+    max-width: 150px; /* Limita a largura para inputs de data */
+}
+
+/* Estilos para botões de ação na tabela (ícones) */
+.btn-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--primary-color);
+    padding: 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px; /* Espaçamento entre os botões de ação */
+}
+
+.btn-action:hover {
+    background-color: var(--secondary-color);
+}
+
+.btn-action.btn-delete {
+    color: var(--red-text);
+}
+.btn-action.btn-delete:hover {
+    background-color: var(--red-status);
+    color: var(--red-text);
+}
+
+/* Nova classe para o empty-state da tabela */
+.empty-state-table {
+    text-align: center;
+    padding: 20px;
+    color: var(--subtle-text-color);
+}
+
+/* MEDIA QUERIES GERAIS (ajustadas para o novo layout) */
 @media (max-width: 768px) {
-    .app-header {
-        flex-direction: column; /* Empilha itens na vertical */
-        align-items: flex-start;
-        padding: 15px;
-        gap: 15px;
-    }
+    /* As media queries para o .app-header foram removidas daqui pois ele não existe mais neste arquivo. */
 
-    .header-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .main-nav ul {
-        flex-direction: column;
-        width: 100%;
-        gap: 5px;
-    }
-    .main-nav .nav-item a {
-        width: 100%;
-        text-align: left;
-    }
-
-    .header-right {
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-        gap: 10px;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .user-info-header {
-        text-align: left;
-    }
-    .user-info-header span {
-        text-align: left;
-    }
-    .button-secondary {
-        width: 100%;
-    }
-
-    .logo-circle, .logo-icon-placeholder {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    .app-title, .app-subtitle {
-        text-align: left;
-    }
-
-    .main-content {
+    .main-content-pages {
         padding: 15px;
     }
 
@@ -654,6 +577,40 @@ a:hover {
     .form-row {
         flex-direction: column;
         gap: 15px;
+    }
+
+    /* Ajustes para cabeçalhos de página em mobile */
+    .page-section-header {
+        flex-direction: column; /* Empilha título e botões em mobile */
+        align-items: flex-start;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .page-section-header h2 {
+        margin-bottom: 10px;
+        font-size: 1.5em;
+    }
+
+    .btn-primary-dark {
+        width: 100%; /* Botão ocupa largura total */
+        justify-content: center; /* Centraliza conteúdo do botão */
+        margin-top: 10px; /* Espaçamento do título */
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        gap: 10px;
+    }
+    .filter-controls label {
+        width: 100%;
+        text-align: left;
+    }
+    .filter-controls .input-field {
+        width: 100%;
+        max-width: none;
     }
 }
 .table-responsive {
@@ -679,10 +636,11 @@ a:hover {
     font-size: 0.95em;
     padding: 6px 4px;
   }
-  .btn-add-new {
+  /* Removido btn-add-new daqui, pois foi substituído por btn-primary-dark nas páginas */
+  /* .btn-add-new {
     width: 100%;
     justify-content: center;
-  }
+  } */
 }
 @media (max-width: 900px) {
   .clients-table th, .clients-table td {
@@ -696,8 +654,9 @@ a:hover {
     font-size: 0.85em;
     padding: 4px 2px;
   }
-  .btn-add-new {
+  /* Removido btn-add-new daqui, pois foi substituído por btn-primary-dark nas páginas */
+  /* .btn-add-new {
     width: 100%;
     margin-bottom: 10px;
-  }
+  } */
 }
